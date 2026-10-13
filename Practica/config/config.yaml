@@ -1,0 +1,10 @@
+# Configuración versionada del prototipo (RF-07, RNF-05).
+# Las rutas relativas se resuelven desde la raíz del repositorio.
+# Para usar otro archivo: variable de entorno SYLLABUSAI_CONFIG.
+
+base_datos:
+  url: sqlite:///data/syllabusai.db
+
+corpus:
+  directorio: data/corpus
+  extensiones: [".pdf", ".docx"]
