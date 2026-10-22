@@ -2,62 +2,312 @@
 \label{chap:introduccion}
 
 \section{Contextualización}
-\textit{[Describir el entorno donde se identifica la necesidad del proyecto, indicando el sector, área de aplicación y situación actual. Incluir información relevante de la entidad receptora o del contexto donde se implementará la solución.]}
+En la educación superior, el sílabo constituye el punto en que el currículo deja de ser una declaración institucional y se convierte en un compromiso concreto con los estudiantes de una asignatura. En él, el docente traduce el perfil de egreso, la malla curricular y los contenidos mínimos en resultados de aprendizaje, unidades, actividades, criterios de evaluación y bibliografía para un período académico determinado. Su elaboración, por tanto, no es un trámite administrativo, sino una tarea de diseño pedagógico que exige interpretar y relacionar documentos normativos de naturaleza diversa. Esta doble condición, académica y documental, convierte al sílabo en un objeto propicio para la asistencia mediante tecnologías de la información.
 
+El presente proyecto se sitúa en la Universidad Tecnológica Indoamérica, concretamente en la Facultad de Ingenierías y en la carrera de Ingeniería en Tecnologías de la Información, sede Quito. En este entorno, la preparación de un sílabo obliga al docente a integrar información procedente del formato institucional, la malla curricular, el perfil de egreso, los resultados de aprendizaje, los contenidos mínimos, la normativa académica y las políticas de evaluación. Dicha información se encuentra distribuida en documentos extensos y heterogéneos, emitidos en distintos momentos y sujetos a actualizaciones. La situación actual se caracteriza, en consecuencia, por un proceso predominantemente manual, en el que la localización, la interpretación y el contraste de las fuentes dependen del esfuerzo individual de cada docente.
+
+A esta necesidad académica se suma un interés investigativo que le otorga una dimensión adicional. SyllabusAI se plantea como un caso de uso aplicado derivado del proyecto LLM-CoDesign, que estudia la caracterización y el co-diseño \textit{hardware-software} de la inferencia de modelos de lenguaje. Mientras el proyecto general aborda el problema de forma amplia, este trabajo concentra el análisis en una carga real de tipo RAG, conversacional de múltiples turnos y basada en agentes, ejecutada sobre una infraestructura GPU concreta. La unidad de análisis puede representarse mediante la configuración $C = (M, W, H, S)$, donde $M$ corresponde al modelo de lenguaje, $W$ al flujo de creación de sílabos, $H$ a la GPU NVIDIA A100 y $S$ a la pila formada por el motor de inferencia, el orquestador del agente y la base vectorial. El contexto del proyecto es, por consiguiente, doble: responde a una necesidad docente y, a la vez, permite estudiar el comportamiento de una aplicación institucional en términos de calidad, latencia, memoria, recuperación y trazabilidad.
+
+La coyuntura tecnológica actual vuelve pertinente esta convergencia. La disponibilidad de modelos de lenguaje abiertos capaces de ejecutarse en infraestructura propia hace posible explorar la asistencia automatizada en la redacción de documentos académicos sin que la información institucional salga de la universidad. Sin embargo, como se examina en el estado del arte, la capacidad de redactar no equivale a la capacidad de redactar conforme a una normativa. Es en esta distancia entre lo técnicamente posible y lo institucionalmente aceptable donde se ubica el presente trabajo.
 
 \section{Estado del Arte}
-\textit{[Presentar la revisión de soluciones, tecnologías, metodologías o proyectos similares relacionados con el tema del proyecto. Analizar mínimo cinco (5) trabajos provenientes de fuentes académicas, técnicas o industriales, citados según normas IEEE. Incluir comparación, ventajas, limitaciones y relación con el proyecto propuesto.]}
+La generación automática de documentos académicos con modelos de lenguaje plantea una pregunta que excede lo puramente técnico: ¿puede un sistema producir un sílabo que sea, a la vez, fluido, fiel a la normativa vigente y verificable por el docente? La literatura reciente ofrece respuestas parciales a esta cuestión, dispersas en líneas de investigación que rara vez se integran entre sí. Por ello, la revisión se organiza en torno a los componentes que articulan la solución propuesta: primero, la generación aumentada por recuperación (RAG) y sus límites; después, la recuperación híbrida con citas y abstención; luego, los agentes que operan con herramientas, la evaluación de sistemas RAG y el uso de modelos de lenguaje en el ámbito educativo; y, finalmente, la infraestructura de inferencia local que hace viable su despliegue. En cada línea se examinan los aportes y las limitaciones de los trabajos más representativos, con el fin de extraer de ellos las decisiones de diseño de SyllabusAI.
 
-Ejemplo de redacción con citas IEEE: para fundamentar una propuesta tecnológica se puede citar el estado del arte en inteligencia artificial y aprendizaje profundo en \cite{vaswani2017attention,goodfellow2016deep}. Del mismo modo, para enfoques de ingeniería de software y proceso de desarrollo pueden emplearse fuentes como \cite{sommerville2016software,boehm1988spiral}.
+\subsection{Generación aumentada por recuperación}
+Anclar la generación en documentos externos constituye la respuesta más consolidada al carácter cerrado del conocimiento paramétrico. Lewis \textit{et al.}~\cite{lewis2020rag} formalizaron este paradigma al combinar una memoria paramétrica, un modelo generador secuencia a secuencia, con una memoria no paramétrica, un índice denso de pasajes consultado mediante el recuperador DPR~\cite{karpukhin2020dpr}. El modelo resultante superó a los generadores puramente paramétricos en tareas de preguntas abiertas y produjo respuestas más específicas y factuales; además, su conocimiento puede actualizarse reemplazando el índice sin reentrenar el modelo, una propiedad decisiva cuando la normativa institucional cambia entre períodos académicos. Sin embargo, el recuperador y el generador se ajustaron de forma conjunta sobre Wikipedia, un escenario alejado de corpus institucionales pequeños, versionados y en español. El principio resulta, por tanto, pertinente, pero su aplicación al dominio de los sílabos exige adaptaciones que la propuesta original no contempla.
 
-\section{Planteamiento del Problema}
-\textit{[Definir de forma clara y precisa el problema o brecha tecnológica identificada. Describir las causas que lo originan y los efectos que genera en el contexto analizado. No incluir la solución en esta sección.]}
+Ahora bien, la madurez del enfoque no implica que sus problemas estén resueltos. La revisión de Gao \textit{et al.}~\cite{gao2023ragsurvey} clasifica su evolución en RAG ingenuo, RAG avanzado, que incorpora técnicas previas y posteriores a la recuperación como la reescritura de consultas y el reordenamiento, y RAG modular, e identifica como problemas abiertos la recuperación de fragmentos irrelevantes, la integración de evidencia contradictoria y la falta de métricas estandarizadas. Esta advertencia se refuerza con la revisión de Ji \textit{et al.}~\cite{ji2023hallucination}, que documenta cómo los modelos de lenguaje generan contenido fluido pero no sustentado por la fuente (alucinación), y con el estudio de Liu \textit{et al.}~\cite{liu2024lost}, que demuestra que el desempeño se degrada cuando la información relevante queda ubicada en la mitad de contextos extensos. De estos hallazgos se desprende que ampliar la ventana de contexto no sustituye a una recuperación precisa; en consecuencia, SyllabusAI genera el sílabo sección por sección y acota el número de fragmentos recuperados (top-$k$). Queda por resolver, no obstante, qué recuperar y cómo garantizar que lo generado remita efectivamente a ello.
 
-\section{Justificación}
-\textit{[Redactar un texto argumentativo que exponga la importancia del proyecto, su impacto técnico y operativo, la utilidad de la solución, los beneficiarios directos e indirectos y la factibilidad técnica y operativa de su implementación.]}
+\subsection{Recuperación híbrida, citas y abstención}
+La precisión de la recuperación depende, en primer lugar, de reconocer que no todas las consultas son semánticas. Los códigos de asignatura o de competencia (p.~ej., PE-MI-05) son identificadores exactos ante los cuales la recuperación puramente semántica falla y que los modelos léxicos clásicos como BM25~\cite{robertson2009bm25} resuelven con facilidad. En lugar de obligar a elegir entre ambos enfoques, BGE-M3~\cite{chen2024bgem3} los concilia al producir, desde un único modelo multilingüe, representaciones densas, dispersas (léxicas) y multivector, con soporte para más de cien idiomas y entradas de hasta 8192 \textit{tokens}. Por ello, constituye un candidato adecuado para la recuperación híbrida en español, aunque su desempeño deberá validarse con consultas propias del dominio.
 
-\section{Objetivos}
-\subsection{Objetivo General}
-\textit{[Redactar el propósito principal del proyecto, alineado con la solución propuesta e incluyendo explícitamente su implementación.]}
-\subsection{Objetivos Específicos}
-\textit{[Enumerar acciones concretas, medibles y verificables que permitan alcanzar el objetivo general. Los objetivos deben cubrir análisis, diseño, implementación y validación.]}
+Recuperar el fragmento correcto, sin embargo, no garantiza que el texto generado lo respete. Gao \textit{et al.}~\cite{gao2023alce} propusieron ALCE, un banco de pruebas reproducible para evaluar la capacidad de los modelos de generar texto con citas. Sus resultados muestran que incluso los modelos más capaces dejan una proporción considerable de afirmaciones sin respaldo completo en las citas que proponen. Cabe concluir, entonces, que la cita no puede delegarse por completo al modelo y que su verificación requiere un mecanismo adicional.
 
-\section{Alcance del Proyecto}
-\textit{[Delimitar los límites del proyecto, especificando claramente los componentes, módulos o funcionalidades que se incluyen, así como aquellos que se excluyen.]}
+Una alternativa consiste en enseñar al propio modelo a vigilar su salida. Asai \textit{et al.}~\cite{asai2024selfrag}, con Self-RAG, lo entrenan para decidir cuándo recuperar y para criticar su propia respuesta mediante \textit{tokens} de reflexión, con mejoras en factualidad y precisión de citas. El aporte es significativo; su costo, en cambio, resulta incompatible con el presente proyecto, pues exige un ajuste fino del modelo que está expresamente excluido del alcance. De ahí que SyllabusAI traslade la decisión de abstención y la verificación de citas a reglas explícitas fuera del modelo, que contrastan cada referencia contra el índice (documento, versión, sección y página). Este desplazamiento del control hacia componentes externos al modelo conduce, de manera natural, a la cuestión de los agentes.
 
-\section{Fundamentación Teórica}
-\textit{[Desarrollar los fundamentos teóricos, conceptos, modelos y tecnologías que sustentan el proyecto. Debe estar relacionado directamente con la solución propuesta y su implementación, aplicable a software, hardware o infraestructura.]}
+\subsection{Agentes con herramientas y control humano}
+Dotar al modelo de herramientas amplía su capacidad de acción, pero también multiplica el riesgo de que actúe sin supervisión. ReAct~\cite{yao2023react} demostró que intercalar trazas de razonamiento con acciones sobre herramientas externas reduce la alucinación y mejora la interpretabilidad frente al razonamiento aislado, ya que cada paso queda registrado y es auditable. Toolformer~\cite{schick2023toolformer}, por su parte, mostró que un modelo puede aprender de forma autosupervisada cuándo y cómo invocar API, aunque nuevamente a costa de entrenamiento adicional. La revisión de Wang \textit{et al.}~\cite{wang2024agentsurvey} sintetiza la arquitectura de estos agentes en cuatro módulos (perfil, memoria, planificación y acción) y, al mismo tiempo, señala como desafíos la fiabilidad en tareas largas, la dificultad de su evaluación y el riesgo de acciones no controladas. La autonomía es, en suma, una fortaleza en tareas exploratorias y una debilidad en contextos normativos, donde cada decisión debe poder atribuirse a un responsable.
 
-\subsection{Ejemplo de Figura 1}
-Como ejemplo de referencia dentro del texto: en la Figura~\ref{fig:ejemplo_1} se presenta un recurso visual demostrativo que guía el formato esperado para los gráficos del documento.
+Por esta razón, el problema no consiste en maximizar la autonomía del agente, sino en delimitarla. En el plano industrial, LangGraph~\cite{langgraph2024} modela el agente como un grafo con estado explícito, persistencia y puntos de interrupción que permiten insertar la aprobación humana entre pasos. Apoyado en esta capacidad y a diferencia de los agentes autónomos de propósito general, SyllabusAI adopta un único grafo con un conjunto cerrado de herramientas y una pausa obligatoria tras cada sección. Se sacrifica así autonomía a cambio de control, trazabilidad y responsabilidad docente, un intercambio deliberado en la elaboración de un documento oficial. Ahora bien, un sistema controlado solo resulta confiable si su calidad puede medirse.
 
-\begin{figure}[htbp]
-  \centering
-  \includegraphics[width=0.80\textwidth]{Capítulos/fig/fig_ejemplo_1.png}
-  \caption{Ejemplo de figura para guiar el formato de gráficos en el documento.}
-  \label{fig:ejemplo_1}
-\end{figure}
-\elaboradopor{Estudiante}
-\fuente{Elaboración propia}
+\subsection{Evaluación de sistemas RAG}
+Evaluar un sistema RAG exige medir no solo si la respuesta es pertinente, sino si está sustentada en lo recuperado. RAGAS~\cite{es2024ragas} responde a esta necesidad con métricas automáticas que no requieren respuestas de referencia: fidelidad (si las afirmaciones se deducen del contexto recuperado), relevancia de la respuesta y relevancia del contexto. Su ventaja es clara durante el desarrollo, pues permite iterar con rapidez; su limitación, menos visible, es que depende de un modelo de lenguaje como juez, cuya calibración en español y en dominios normativos no está garantizada. Confiar exclusivamente en esta herramienta equivaldría a validar un modelo con otro igualmente falible. Por consiguiente, el plan de evaluación de SyllabusAI combina métricas de recuperación sobre consultas anotadas manualmente (Recall@$k$, MRR), verificación automática de citas y revisión humana con rúbrica académica.
 
-\subsection{Ejemplo de Tabla 1}
-Como ejemplo de referencia cruzada en párrafo: la Tabla~\ref{tab:ejemplo_1} resume indicadores base que luego pueden compararse con los resultados de implementación.
+\subsection{Modelos de lenguaje en educación y alineación curricular}
+La utilidad de los modelos de lenguaje para la docencia es ampliamente reconocida; lo que permanece en discusión es la fiabilidad de lo que producen. Kasneci \textit{et al.}~\cite{kasneci2023chatgpt} analizan sus oportunidades para los docentes, entre ellas el apoyo a la planificación de clases y la elaboración de materiales, y advierten a la vez sobre sus riesgos: sesgos, contenido incorrecto, dependencia excesiva y la necesidad de que el docente mantenga el control sobre el resultado. El caso del sílabo ilustra bien esta tensión, ya que un asistente conversacional de propósito general puede redactar un documento plausible, pero no conoce la normativa, la malla ni el perfil de egreso de una institución concreta, ni verifica que el texto cumpla un formato oficial. La plausibilidad, en consecuencia, no basta: se requiere un criterio explícito de calidad.
+
+Ese criterio proviene de la teoría del alineamiento constructivo de Biggs~\cite{biggs1996alignment}, según la cual los resultados de aprendizaje, las actividades de enseñanza y las tareas de evaluación deben ser coherentes entre sí. Lejos de quedar como un principio pedagógico abstracto, esta coherencia puede traducirse en condiciones comprobables. SyllabusAI la convierte en reglas verificables: cada resultado de aprendizaje debe estar cubierto por al menos un contenido, una actividad y un instrumento de evaluación, sin elementos huérfanos. De este modo, la calidad del sílabo deja de depender del juicio del modelo y pasa a contrastarse con un estándar pedagógico reconocido.
+
+\subsection{Infraestructura de inferencia y procesamiento documental}
+Ninguna de las decisiones anteriores sería sostenible si el sistema dependiera de servicios externos, pues se exige que ningún documento institucional salga de la infraestructura propia. Esta restricción, lejos de ser un obstáculo, puede atenderse con la tecnología disponible. Motores como vLLM~\cite{kwon2023vllm} hacen viable el despliegue local de modelos abiertos: su mecanismo PagedAttention gestiona la caché de claves y valores en bloques no contiguos, reduce la fragmentación de memoria y eleva el \textit{throughput} entre dos y cuatro veces frente a sistemas previos con una latencia comparable. A ello se suma la familia Qwen3~\cite{yang2025qwen3}, que ofrece modelos densos y de mezcla de expertos que integran los modos de razonamiento y de respuesta directa en un mismo modelo, con soporte multilingüe, lo que permite ejecutar la variante de 8B parámetros en una sola GPU NVIDIA A100. La inferencia local resulta, por tanto, no solo posible, sino eficiente con recursos acotados.
+
+Queda, sin embargo, un eslabón previo del que depende toda la cadena: la calidad de la recuperación está condicionada por la fidelidad con que se extraen los documentos fuente. Las mallas curriculares y los contenidos mínimos contienen tablas cuya estructura transporta significado, de modo que una extracción plana destruiría información esencial. Docling~\cite{auer2024docling} resuelve este problema al convertir documentos PDF a formatos estructurados mediante el análisis del diseño de página y el reconocimiento de la estructura de tablas, lo que conserva su organización al momento de indexarlos. Sin esta capacidad, el resto del sistema operaría sobre fragmentos desordenados y las citas verificables perderían su referente.
+
+\subsection{Síntesis comparativa}
+Contrastar los trabajos revisados permite advertir que cada uno resuelve una parte del problema y deja abierta otra. La Tabla~\ref{tab:estado_arte} resume sus ventajas, sus limitaciones y la manera en que cada uno se incorpora al diseño de SyllabusAI.
 
 \begin{table}[htbp]
   \centering
-  \caption{Ejemplo de tabla para registrar métricas iniciales del diagnóstico.}
-  \label{tab:ejemplo_1}
-  \begin{tabular}{|l|c|c|}
+  \caption{Síntesis comparativa de los trabajos revisados y su relación con SyllabusAI.}
+  \label{tab:estado_arte}
+  \footnotesize
+  \setlength{\tabcolsep}{4pt}
+  \renewcommand{\arraystretch}{1.25}
+  \begin{tabular}{|>{\raggedright\arraybackslash}p{2.3cm}|>{\raggedright\arraybackslash}p{3.3cm}|>{\raggedright\arraybackslash}p{3.3cm}|>{\raggedright\arraybackslash}p{3.6cm}|}
     \hline
-    Indicador & Valor actual & Meta \\
+    \textbf{Trabajo} & \textbf{Ventaja} & \textbf{Limitación} & \textbf{Relación con SyllabusAI} \\
     \hline
-    Tiempo de respuesta (ms) & 850 & 400 \\
+    RAG~\cite{lewis2020rag} & Conocimiento actualizable sin reentrenar & Ajustado sobre Wikipedia, sin metadatos de vigencia & Base del enfoque; se añaden filtros por tipo, carrera y versión \\
     \hline
-    Disponibilidad (\%) & 96.2 & 99.0 \\
+    Revisión RAG~\cite{gao2023ragsurvey} & Taxonomía y técnicas avanzadas (reordenamiento, reescritura de consultas) & Sin evaluación en dominios institucionales & Guía para el diseño modular de la recuperación \\
     \hline
-    Incidencias mensuales & 14 & 6 \\
+    BGE-M3~\cite{chen2024bgem3} & Recuperación densa y léxica multilingüe en un solo modelo & Requiere validación con consultas propias en español & Modelo de \textit{embeddings} candidato para la búsqueda híbrida \\
+    \hline
+    ALCE~\cite{gao2023alce} & Métricas reproducibles de calidad de citas & Evidencia que los modelos citan de forma incompleta & Justifica verificar las citas contra el índice \\
+    \hline
+    Self-RAG~\cite{asai2024selfrag} & Recuperación adaptativa y autocrítica & Exige ajuste fino del modelo & Se sustituye por abstención basada en reglas \\
+    \hline
+    ReAct~\cite{yao2023react} & Razonamiento y acciones auditables & Bucle autónomo sin control humano & Herramientas cerradas y pausa por sección \\
+    \hline
+    RAGAS~\cite{es2024ragas} & Evaluación sin respuestas de referencia & Depende de un modelo juez & Complemento de la evaluación manual y por rúbrica \\
+    \hline
+    LLM en educación~\cite{kasneci2023chatgpt} & Apoyo a la planificación docente & Contenido no verificado ni institucional & Docente como responsable final del sílabo \\
+    \hline
+    vLLM~\cite{kwon2023vllm} & Alto \textit{throughput} y uso eficiente de memoria & Requiere GPU dedicada & Motor de inferencia local sobre la A100 \\
     \hline
   \end{tabular}
 \end{table}
-\elaboradopor{Estudiante}
-\fuente{Datos de levantamiento inicial}
+\elaboradopor{Rubén Jhair Mera Cedeño}
+\fuente{Elaboración propia}
+
+La revisión permite responder a la pregunta inicial: los componentes técnicos necesarios para generar sílabos fiables están maduros por separado, pero no se identificó una solución que los integre bajo una normativa institucional concreta. Los asistentes generales no recuperan documentos vigentes ni verifican el formato; las propuestas de investigación más avanzadas en citas y autocrítica dependen del ajuste fino, y los agentes autónomos no contemplan la aprobación humana por etapas. SyllabusAI se ubica precisamente en esa brecha: integra recuperación filtrada por vigencia y versión, abstención explícita, citas verificables, reglas de alineamiento curricular y aprobación docente, ejecutados de forma local con un modelo abierto. Identificada la brecha en la literatura, corresponde precisar cómo se manifiesta en la práctica, tarea que aborda el planteamiento del problema.
+
+\section{Planteamiento del Problema}
+El problema que motiva este trabajo no radica en la ausencia de información curricular, sino en la dificultad de integrarla de forma oportuna, verificable y coherente. La creación manual de sílabos presenta dificultades de tiempo, trazabilidad y consistencia curricular, y no existe en la institución una herramienta que integre automáticamente las fuentes académicas vigentes, guíe al docente por etapas y verifique la alineación entre los elementos del sílabo antes de su exportación. Formulado en estos términos, el problema tiene un carácter tecnológico: se trata de una brecha entre la información que la institución ya posee y los medios disponibles para aprovecharla en el momento de planificar una asignatura. Para comprenderlo cabalmente conviene examinar, en primer lugar, sus causas y, en segundo lugar, sus efectos.
+
+La primera causa reside en la dispersión y la heterogeneidad de las fuentes. La información necesaria para un sílabo se reparte entre el formato institucional, la malla curricular, el perfil de egreso, los contenidos mínimos, la normativa académica y las políticas de evaluación, documentos que difieren en extensión, estructura y fecha de emisión. Muchos de ellos se distribuyen en formatos PDF o DOCX, con tablas y jerarquías internas que no se prestan a una consulta rápida. A ello se añade que estos documentos se actualizan con el tiempo, de modo que el docente no solo debe encontrar la información, sino asegurarse de que proviene de la versión vigente. Localizar el dato correcto se convierte así en una tarea de búsqueda y verificación que precede a cualquier decisión pedagógica.
+
+La segunda causa es la ausencia de mecanismos que integren estas fuentes y verifiquen su coherencia. En la práctica, el docente debe localizar información, adaptar resultados de aprendizaje, distribuir contenidos, diseñar actividades y comprobar que la evaluación sea coherente con los objetivos formativos, sin un apoyo que relacione automáticamente unos elementos con otros. La verificación del alineamiento entre resultados de aprendizaje, contenidos, actividades y evaluación, así como la consistencia de horas y ponderaciones, recae por completo en la revisión humana. Cuando una tarea de control depende únicamente de la atención individual, su calidad varía con la experiencia, el tiempo disponible y la carga de trabajo de quien la realiza.
+
+Una tercera causa, más reciente, agrava las dos anteriores: el recurso a asistentes conversacionales de propósito general. Un modelo de lenguaje utilizado sin acceso a las fuentes institucionales puede generar textos plausibles, pero no necesariamente correctos ni alineados con la normativa vigente. Lejos de resolver la dispersión documental, este uso la oculta, ya que produce un documento de apariencia acabada cuyas afirmaciones no remiten a ningún documento verificable. El riesgo, por consiguiente, ya no es solo la omisión, sino la incorporación de contenido erróneo bajo una forma convincente.
+
+Estas causas se traducen en efectos que afectan tanto al docente como a la institución. En el plano del docente, el proceso puede consumir varias horas por asignatura, tiempo que se resta a actividades de mayor valor pedagógico. En el plano del documento, el resultado son sílabos con diferencias de estilo, campos incompletos o relaciones curriculares poco explícitas, lo que dificulta compararlos entre sí y revisarlos de manera sistemática. En el plano institucional, la falta de trazabilidad impide reconstruir de qué documento y de qué versión procede cada afirmación, de manera que el uso inadvertido de una normativa desactualizada puede pasar desapercibido hasta etapas tardías de revisión. Los efectos, en suma, no se limitan a la eficiencia: comprometen la calidad y la auditabilidad de un documento oficial.
+
+De lo expuesto se desprende que el problema central puede formularse de la siguiente manera: la elaboración de sílabos en la carrera depende de un proceso manual que integra con dificultad fuentes institucionales dispersas y versionadas, que no garantiza la trazabilidad de su contenido ni la verificación sistemática de su coherencia curricular, y para el cual las herramientas generales de inteligencia artificial no ofrecen garantías de fidelidad normativa. Esta formulación conduce a la pregunta que orienta el trabajo: ¿cómo asistir al docente en la elaboración de sílabos de manera que se reduzca el tiempo de preparación sin sacrificar la fidelidad a las fuentes vigentes, la trazabilidad ni su responsabilidad sobre el resultado?
+
+\section{Justificación}
+La pertinencia de este proyecto se funda, ante todo, en la naturaleza recurrente y estratégica de la tarea que aborda. La preparación de un sílabo se repite en cada período académico y para cada asignatura, y de su calidad depende que el currículo declarado por la institución se materialice efectivamente en el aula. Una mejora en este proceso, por modesta que parezca a escala individual, se multiplica por el número de asignaturas y de períodos en que se aplica. Asistir esta tarea no constituye, por tanto, una comodidad marginal, sino una intervención sobre uno de los eslabones que vinculan la planificación institucional con la práctica docente.
+
+Desde el punto de vista técnico, el proyecto aporta una respuesta concreta a los límites que la literatura señala en los modelos de lenguaje. Como se mostró en el estado del arte, la generación aumentada por recuperación reduce el riesgo de alucinación al condicionar la respuesta a fragmentos recuperados, pero no resuelve por sí sola la verificación de citas, el control de vigencia ni la supervisión humana. La incorporación de un agente permite dividir el proceso en tareas controladas: consultar la normativa, identificar competencias, planificar unidades, diseñar la evaluación, verificar la consistencia y generar el documento final. El valor técnico del trabajo reside, en consecuencia, en la integración de estos componentes en un sistema local, auditable y medible, cuyas decisiones de diseño pueden contrastarse con métricas de recuperación, fidelidad y rendimiento.
+
+En el plano operativo, la utilidad de la solución se expresa en tres dimensiones complementarias. La primera es el tiempo: al recuperar automáticamente la información pertinente y proponer el contenido sección por sección, el docente deja de buscar y pasa a revisar. La segunda es la consistencia: las reglas de validación de estructura, completitud y coherencia curricular homogenizan los sílabos y detectan omisiones antes de la exportación. La tercera es la trazabilidad: cada sección conserva el registro de los documentos, versiones y páginas que la sustentan, lo que facilita la revisión por parte de coordinadores y responsables curriculares. Ninguna de estas ventajas sustituye el criterio docente; por el contrario, el principio que guía el sistema es que el agente propone y verifica, mientras el docente revisa, corrige y aprueba.
+
+Los beneficiarios de la propuesta se distinguen según su cercanía con el uso del sistema. Los beneficiarios directos son los docentes de la carrera de Ingeniería en Tecnologías de la Información, quienes disponen de un asistente que reduce la carga de búsqueda y verificación, y los responsables curriculares, que obtienen sílabos más homogéneos y trazables. Los beneficiarios indirectos son, en primer lugar, los estudiantes, que reciben una planificación coherente con el perfil de egreso; en segundo lugar, la institución, que fortalece la calidad documental de sus procesos académicos; y, finalmente, el proyecto de investigación LLM-CoDesign, que obtiene datos reales de calidad, latencia, memoria y recuperación sobre una carga de trabajo institucional. El alcance de los beneficios trasciende así al usuario inmediato del sistema.
+
+La factibilidad técnica del proyecto descansa en la madurez de las tecnologías que lo componen y en la disponibilidad de la infraestructura necesaria. El prototipo se ejecutará localmente sobre una GPU NVIDIA A100, con un modelo de lenguaje abierto (Qwen3-8B) servido mediante vLLM, una base vectorial para el almacenamiento de fragmentos, LangGraph para la orquestación del agente y herramientas de procesamiento documental como PyMuPDF, Docling y python-docx. Estas tecnologías cuentan con documentación pública y no exigen entrenar ni ajustar el modelo, lo que reduce de manera considerable la complejidad y el costo del desarrollo. La ejecución local, además, permite cumplir el requisito de que ningún documento institucional salga a servicios externos.
+
+La factibilidad operativa, por su parte, se asegura mediante un alcance deliberadamente acotado. El piloto se limita a una carrera, un único formato institucional y entre tres y cinco asignaturas, con documentos oficiales vigentes identificados por fecha y versión, y una validación con un grupo reducido de docentes o expertos curriculares. Esta delimitación permite completar el desarrollo en el plazo estimado de doce semanas y, al mismo tiempo, obtener evidencia suficiente para evaluar la calidad, la utilidad, la trazabilidad, la usabilidad y el rendimiento del prototipo. Asimismo, el sistema no se integra con los sistemas académicos productivos ni modifica procesos administrativos, de modo que su adopción experimental no interfiere con la operación habitual de la institución.
+
+Por último, el proyecto se justifica desde la formación profesional del autor. La propuesta se alinea con las competencias del perfil de egreso de la carrera, entre ellas la aplicación de teorías, metodologías, estándares y tecnologías para crear soluciones de software (PE-MI-05), el uso de normas y estándares de calidad de ingeniería en tecnologías de la información (PE-MI-06) y el desarrollo de aplicaciones informáticas de vanguardia para procesar información y automatizar procesos (PE-PP-04). En suma, SyllabusAI es pertinente porque responde a una necesidad institucional real, técnicamente viable porque se apoya en tecnologías maduras y formativamente valioso porque recorre el ciclo completo de la ingeniería de software aplicada a la inteligencia artificial.
+
+\section{Objetivos}
+\subsection{Objetivo General}
+Desarrollar y evaluar un agente inteligente basado en RAG que asista a los docentes en la creación de sílabos alineados con el formato, la normativa y los documentos curriculares institucionales.
+
+\subsection{Objetivos Específicos}
+\begin{enumerate}
+  \item Identificar, clasificar, versionar y procesar (extracción, limpieza, segmentación e indexación) los documentos institucionales requeridos para la elaboración de sílabos.
+  \item Desarrollar un sistema RAG para recuperar normativa, competencias, resultados de aprendizaje y contenidos mínimos.
+  \item Implementar un agente con herramientas especializadas para generar, revisar y exportar (DOCX/PDF) las secciones del sílabo en el formato institucional.
+  \item Incorporar reglas de validación de estructura, completitud, trazabilidad y coherencia curricular.
+  \item Evaluar la calidad, utilidad, trazabilidad, usabilidad y rendimiento del prototipo con casos de prueba y docentes.
+\end{enumerate}
+
+\section{Alcance del Proyecto}
+Delimitar el alcance resulta indispensable en un proyecto cuya tecnología base podría, en principio, aplicarse a casi cualquier tarea de redacción. El presente trabajo se circunscribe al desarrollo de un prototipo funcional, y no de un sistema en producción, cuya finalidad es demostrar y evaluar la viabilidad de la asistencia basada en RAG para la elaboración de sílabos. Esta distinción orienta las decisiones posteriores: se incluye aquello que es necesario para validar la propuesta con usuarios reales y se excluye aquello que, aun siendo deseable, excede el plazo, los recursos o la responsabilidad que corresponde a un sistema de apoyo.
+
+En el plano funcional, el prototipo abarca el ciclo completo que va desde los documentos institucionales hasta el sílabo exportado, y comprende los siguientes componentes:
+\begin{itemize}
+  \item Carga y procesamiento de documentos institucionales en PDF y DOCX.
+  \item Indexación semántica de normativa, perfil de egreso, malla curricular, contenidos mínimos y sílabos aprobados.
+  \item Formulario guiado para ingresar los datos generales de la asignatura.
+  \item Generación progresiva de las secciones del sílabo.
+  \item Recuperación de fuentes y presentación de las referencias utilizadas.
+  \item Verificación de la alineación curricular y de los campos obligatorios.
+  \item Historial básico de cambios y revisión humana por etapas.
+  \item Exportación al formato institucional en DOCX y PDF.
+  \item Registro de latencia, consultas, fuentes recuperadas y correcciones del usuario.
+\end{itemize}
+Estos componentes no constituyen funciones aisladas, sino etapas encadenadas de un mismo flujo, de modo que cada una se corresponde con al menos uno de los objetivos específicos.
+
+En el plano institucional, el alcance se restringe a un escenario piloto que permite controlar las variables de la evaluación:
+\begin{itemize}
+  \item Una carrera y un único formato institucional.
+  \item Entre tres y cinco asignaturas para la validación piloto.
+  \item Documentos oficiales vigentes, identificados por fecha y versión.
+  \item Generación en español.
+  \item Validación con un grupo reducido de docentes o expertos curriculares.
+  \item Una única configuración de modelo local sobre la NVIDIA A100.
+\end{itemize}
+Esta delimitación no reduce la validez del trabajo; al contrario, permite atribuir los resultados a la propuesta y no a la variabilidad entre carreras, formatos o configuraciones.
+
+Tan importante como lo que se incluye es lo que se excluye de manera expresa. Algunas exclusiones responden a límites de tiempo y recursos, mientras que otras obedecen a una decisión de principio: el sistema no debe asumir responsabilidades que corresponden al docente o a la institución. Quedan fuera del alcance:
+\begin{itemize}
+  \item La aprobación automática del sílabo sin intervención docente.
+  \item La integración productiva con los sistemas académicos institucionales.
+  \item La modificación autónoma del currículo, la malla o el perfil de egreso.
+  \item El soporte simultáneo para múltiples universidades y formatos.
+  \item La firma electrónica, los flujos administrativos completos y las notificaciones oficiales.
+  \item El entrenamiento o ajuste fino (\textit{fine-tuning}) del modelo de lenguaje.
+  \item Las arquitecturas multiagente, la navegación autónoma por Internet y la ejecución de trámites.
+\end{itemize}
+Entre estas exclusiones, la renuncia al ajuste fino del modelo y a la aprobación automática merece subrayarse, pues condiciona el diseño: obliga a trasladar el control de calidad a reglas explícitas y a la revisión humana por etapas, tal como se argumentó en el estado del arte.
+
+\section{Fundamentación Teórica}
+Si el estado del arte permitió situar la propuesta frente a los trabajos existentes, la fundamentación teórica tiene por objeto precisar los conceptos sobre los que se construye. La exposición avanza desde el objeto del problema hacia los medios técnicos de su solución: se parte del sílabo como instrumento de planificación curricular, se continúa con los modelos de lenguaje y la recuperación de información, se describen la generación aumentada por recuperación y los agentes basados en modelos de lenguaje, y se concluye con los fundamentos de la inferencia y de la evaluación. Cada concepto se presenta en la medida en que interviene directamente en el diseño y la implementación de SyllabusAI.
+
+\subsection{El sílabo y el alineamiento constructivo}
+El sílabo puede definirse como el documento que planifica una asignatura para un período académico, al establecer sus resultados de aprendizaje, contenidos, metodología, evaluación y bibliografía. Su función excede la de un índice temático, ya que puede entenderse como un acuerdo pedagógico entre el docente, los estudiantes y la institución, y como el nivel más concreto en que se despliega el currículo. Entre sus componentes existe, además, una jerarquía de dependencia: los resultados de aprendizaje derivan de las competencias del perfil de egreso y de los contenidos mínimos de la malla, y a su vez determinan las unidades, las actividades y los instrumentos de evaluación. Comprender esta jerarquía resulta esencial, pues de ella depende el orden en que el sistema genera las secciones.
+
+La coherencia entre estos componentes encuentra su fundamento en el alineamiento constructivo propuesto por Biggs~\cite{biggs1996alignment}. Según este modelo, el aprendizaje se favorece cuando los resultados esperados, las actividades de enseñanza y las tareas de evaluación se alinean en torno a lo que el estudiante debe ser capaz de hacer. El adjetivo \textit{constructivo} alude a que el estudiante construye el significado mediante su propia actividad, mientras que \textit{alineamiento} remite a la coherencia deliberada que el docente establece entre los elementos de la enseñanza. Para efectos de este trabajo, el modelo ofrece una ventaja decisiva: permite expresar la calidad curricular como un conjunto de relaciones verificables entre elementos, y no como una apreciación global.
+
+Esta propiedad puede formalizarse. Si $R$ denota el conjunto de resultados de aprendizaje y $C$, $A$ y $E$ los conjuntos de contenidos, actividades e instrumentos de evaluación, el sílabo satisface la condición de cobertura cuando todo resultado se vincula con al menos un elemento de cada conjunto, tal como expresa la Ecuación~\ref{eq:cobertura}.
+
+\begin{equation}
+\label{eq:cobertura}
+\forall\, r \in R:\quad \exists\, c \in C,\; a \in A,\; e \in E \;\; \text{tales que} \;\; r \sim c,\; r \sim a,\; r \sim e
+\end{equation}
+\addeqtolist{Condición de cobertura del alineamiento constructivo}
+
+En ella, $r \sim x$ indica que el elemento $x$ declara contribuir al resultado $r$. La condición complementaria, la ausencia de elementos huérfanos, exige que todo contenido, actividad o instrumento esté vinculado con al menos un resultado. Ambas condiciones transforman un principio pedagógico en una regla que puede evaluarse de forma automática, lo que constituye la base del módulo de validación curricular.
+
+\subsection{Modelos de lenguaje de gran escala}
+Los modelos de lenguaje de gran escala (LLM, por sus siglas en inglés) son redes neuronales profundas~\cite{goodfellow2016deep} entrenadas para estimar la probabilidad de una secuencia de texto. Dado un contexto formado por los \textit{tokens} $x_1, \dots, x_{t-1}$, el modelo predice una distribución sobre el siguiente \textit{token}, y la generación se realiza de forma autorregresiva, \textit{token} a \textit{token}, según la Ecuación~\ref{eq:autorregresivo}.
+
+\begin{equation}
+\label{eq:autorregresivo}
+P(x_1, \dots, x_T) = \prod_{t=1}^{T} P(x_t \mid x_1, \dots, x_{t-1})
+\end{equation}
+\addeqtolist{Factorización autorregresiva de un modelo de lenguaje}
+
+El \textit{token}, unidad mínima de procesamiento, corresponde a una palabra o a un fragmento de palabra, y la cantidad máxima de \textit{tokens} que el modelo puede considerar simultáneamente define su ventana de contexto. Esta formulación explica tanto la fluidez de los textos generados como su principal debilidad: el modelo optimiza la verosimilitud lingüística, no la veracidad factual.
+
+La arquitectura que sustenta a estos modelos es el Transformer, propuesto por Vaswani \textit{et al.}~\cite{vaswani2017attention}, cuyo componente central es el mecanismo de atención. La atención permite que cada posición de la secuencia pondere la relevancia de todas las demás, según la Ecuación~\ref{eq:atencion}.
+
+\begin{equation}
+\label{eq:atencion}
+\mathrm{Attention}(Q, K, V) = \mathrm{softmax}\!\left(\frac{Q K^{\top}}{\sqrt{d_k}}\right) V
+\end{equation}
+\addeqtolist{Atención de producto escalar escalado}
+
+En ella, $Q$, $K$ y $V$ son las matrices de consultas, claves y valores obtenidas por proyección lineal de las representaciones de entrada, y $d_k$ es la dimensión de las claves. Este mecanismo tiene una consecuencia práctica directa para el proyecto: durante la generación, las claves y los valores de los \textit{tokens} ya procesados se almacenan en una caché cuyo tamaño crece con la longitud del contexto, de modo que la memoria de la GPU se convierte en un recurso limitante. Por ello, acotar el contexto no es solo una decisión de calidad, sino también de eficiencia.
+
+El conocimiento de un LLM reside en sus parámetros, ajustados durante el entrenamiento, y por eso se denomina conocimiento paramétrico. Esta forma de memoria presenta dos limitaciones relevantes para el dominio institucional: queda fijada en la fecha de entrenamiento y no incluye documentos privados, como la normativa o la malla de una universidad concreta. Cuando se le solicita información que no posee, el modelo tiende a producir igualmente una respuesta verosímil, fenómeno conocido como alucinación~\cite{ji2023hallucination}. De ahí la necesidad de complementar la memoria paramétrica con una fuente externa y verificable, lo que conduce a la recuperación de información.
+
+\subsection{Representación vectorial y recuperación de información}
+La recuperación de información tiene por objeto encontrar, dentro de una colección de documentos, aquellos que satisfacen una necesidad de información expresada mediante una consulta~\cite{manning2008ir}. En la recuperación densa, tanto la consulta como los fragmentos se representan como vectores en un espacio de alta dimensión, denominados \textit{embeddings}, generados por un modelo codificador de manera que los textos semánticamente próximos queden cercanos entre sí~\cite{reimers2019sbert,karpukhin2020dpr}. La proximidad suele medirse mediante la similitud coseno, definida en la Ecuación~\ref{eq:coseno}.
+
+\begin{equation}
+\label{eq:coseno}
+\mathrm{sim}(\mathbf{q}, \mathbf{d}) = \frac{\mathbf{q} \cdot \mathbf{d}}{\lVert \mathbf{q} \rVert \, \lVert \mathbf{d} \rVert}
+\end{equation}
+\addeqtolist{Similitud coseno entre consulta y fragmento}
+
+Este enfoque permite recuperar fragmentos pertinentes aunque no compartan las mismas palabras que la consulta, lo que resulta valioso cuando el docente formula su necesidad en términos distintos a los del documento normativo.
+
+La recuperación léxica, en cambio, se basa en la coincidencia de términos. Su exponente más difundido es BM25~\cite{robertson2009bm25}, que puntúa un documento $d$ frente a una consulta $q$ según la Ecuación~\ref{eq:bm25}.
+
+\begin{equation}
+\label{eq:bm25}
+\mathrm{BM25}(q, d) = \sum_{t \in q} \mathrm{IDF}(t) \cdot \frac{f(t, d)\,(k_1 + 1)}{f(t, d) + k_1 \left(1 - b + b \, \dfrac{|d|}{\mathrm{avgdl}}\right)}
+\end{equation}
+\addeqtolist{Función de puntuación BM25}
+
+En ella, $f(t, d)$ es la frecuencia del término $t$ en $d$, $|d|$ la longitud del documento, $\mathrm{avgdl}$ la longitud media de los documentos de la colección, $\mathrm{IDF}(t)$ la frecuencia inversa de documento del término, y $k_1$ y $b$ parámetros de ajuste. Su fortaleza complementa la debilidad de la recuperación densa: identifica con precisión términos exactos, como los códigos de asignatura o de competencia, que los \textit{embeddings} tienden a diluir.
+
+La recuperación híbrida combina ambas señales para aprovechar sus fortalezas complementarias, ya sea fusionando las listas de resultados o empleando modelos que producen simultáneamente representaciones densas y dispersas, como BGE-M3~\cite{chen2024bgem3}. A esta combinación se añade, en el dominio institucional, el filtrado por metadatos: cada fragmento conserva atributos como tipo de documento, carrera, versión, vigencia, sección y página, de modo que la búsqueda puede restringirse a los documentos vigentes antes de calcular la similitud. La recuperación deja de ser, así, una mera búsqueda por parecido y pasa a ser una búsqueda gobernada por reglas de validez documental.
+
+La calidad de un recuperador se evalúa comparando sus resultados con un conjunto de fragmentos relevantes anotados manualmente~\cite{manning2008ir}. Dos métricas resultan especialmente pertinentes para este propósito. La primera, Recall@$k$, mide la proporción de fragmentos relevantes que aparecen entre los $k$ primeros resultados; la segunda, el rango recíproco medio (MRR), premia que el primer fragmento relevante aparezca en las posiciones más altas. Para un conjunto $Q$ de consultas, ambas se definen en las Ecuaciones~\ref{eq:recall} y~\ref{eq:mrr}.
+
+\begin{equation}
+\label{eq:recall}
+\mathrm{Recall@}k = \frac{1}{|Q|} \sum_{q \in Q} \frac{|\mathrm{Rel}_q \cap \mathrm{Top}_k(q)|}{|\mathrm{Rel}_q|}
+\end{equation}
+\addeqtolist{Exhaustividad en los primeros k resultados (Recall@k)}
+
+\begin{equation}
+\label{eq:mrr}
+\mathrm{MRR} = \frac{1}{|Q|} \sum_{q \in Q} \frac{1}{\mathrm{rank}_q}
+\end{equation}
+\addeqtolist{Rango recíproco medio (MRR)}
+
+En ellas, $\mathrm{Rel}_q$ es el conjunto de fragmentos relevantes para la consulta $q$, $\mathrm{Top}_k(q)$ el conjunto de los $k$ primeros fragmentos recuperados y $\mathrm{rank}_q$ la posición del primer fragmento relevante. Mientras Recall@$k$ informa si la evidencia llega al modelo, MRR indica con qué prioridad llega, dos aspectos que inciden directamente en la calidad de la generación.
+
+\subsection{Generación aumentada por recuperación}
+La generación aumentada por recuperación integra los dos componentes anteriores: un recuperador que selecciona evidencia de un corpus externo y un generador que produce la respuesta condicionada a dicha evidencia~\cite{lewis2020rag}. En su formulación probabilística, la salida $y$ para una entrada $x$ se obtiene marginalizando sobre los fragmentos $z$ recuperados, tal como expresa la Ecuación~\ref{eq:rag}.
+
+\begin{equation}
+\label{eq:rag}
+P(y \mid x) \approx \sum_{z \in \mathrm{top}\text{-}k(p_\eta(\cdot \mid x))} p_\eta(z \mid x)\, p_\theta(y \mid x, z)
+\end{equation}
+\addeqtolist{Formulación probabilística de la generación aumentada por recuperación}
+
+En ella, $p_\eta$ representa al recuperador y $p_\theta$ al generador. La idea fundamental consiste en separar el conocimiento de la capacidad lingüística: el modelo aporta la capacidad de redactar y el corpus aporta los hechos. Gracias a esta separación, actualizar el conocimiento del sistema equivale a actualizar el índice, sin modificar los parámetros del modelo.
+
+En la práctica, un sistema RAG se organiza en dos fases. La fase de indexación, realizada de forma previa, comprende la extracción del texto de los documentos fuente, su limpieza, la segmentación en fragmentos (\textit{chunks}) que conservan sus metadatos y la generación de los \textit{embeddings} que se almacenan en una base vectorial. La fase de consulta, ejecutada en cada solicitud, comprende la recuperación de los fragmentos más relevantes, su inserción en la instrucción (\textit{prompt}) que recibe el modelo y la generación de la respuesta. La calidad de la segunda fase está condicionada por la primera: una segmentación que separe una tabla de su encabezado, o un fragmento que pierda la referencia a su versión, produce errores que ningún generador puede corregir después.
+
+Sobre esta base se apoyan dos mecanismos que adquieren especial relevancia en el dominio normativo. La citación consiste en asociar cada afirmación generada con el fragmento que la sustenta, identificado por documento, versión, sección y página, de modo que el lector pueda verificarla~\cite{gao2023alce}. La abstención, por su parte, consiste en que el sistema se niegue a generar contenido cuando la evidencia recuperada es insuficiente y comunique qué información falta. Ambos mecanismos responden a una misma lógica: en un documento oficial es preferible una sección incompleta y advertida que una sección completa pero infundada.
+
+\subsection{Agentes basados en modelos de lenguaje}
+Un agente basado en modelos de lenguaje es un sistema en el que el modelo no se limita a responder, sino que decide qué acciones ejecutar para alcanzar un objetivo, observa sus resultados y ajusta los pasos siguientes~\cite{wang2024agentsurvey}. Las acciones se materializan mediante herramientas, es decir, funciones externas con entradas y salidas definidas, como una consulta al recuperador o la generación de un archivo. El patrón ReAct~\cite{yao2023react} describe este funcionamiento como una alternancia entre razonamiento y acción en la que cada paso queda registrado. La noción de agente introduce, así, la capacidad de descomponer una tarea compleja en etapas, condición necesaria para elaborar un documento extenso y estructurado como el sílabo.
+
+El grado de autonomía de un agente puede variar desde bucles abiertos, en los que el modelo decide libremente cuándo terminar, hasta flujos estructurados en los que el desarrollador define de antemano los pasos posibles. En el segundo caso, el agente se modela como un grafo dirigido: los nodos representan etapas o herramientas, las aristas definen las transiciones permitidas y un estado compartido acumula la información producida a lo largo del flujo~\cite{langgraph2024}. Este modelo admite puntos de interrupción en los que la ejecución se detiene hasta recibir la intervención de una persona, patrón conocido como humano en el bucle (\textit{human-in-the-loop}). Para un sistema de apoyo a la docencia, esta propiedad no es accesoria: es la que permite que la responsabilidad final sobre el documento permanezca en el docente.
+
+\subsection{Inferencia de modelos de lenguaje}
+La inferencia es el proceso mediante el cual un modelo ya entrenado produce una salida a partir de una entrada, y en los LLM se descompone en dos fases de naturaleza distinta. En la fase de prellenado (\textit{prefill}), el modelo procesa en paralelo todos los \textit{tokens} de la instrucción y construye la caché de claves y valores; en la fase de decodificación (\textit{decode}), genera los \textit{tokens} de salida uno a uno, reutilizando dicha caché. La primera fase está limitada principalmente por la capacidad de cómputo de la GPU, mientras que la segunda lo está por el ancho de banda y la capacidad de su memoria. Esta distinción explica por qué las instrucciones con muchos fragmentos recuperados incrementan el tiempo de espera inicial y por qué el número de solicitudes simultáneas depende de la memoria disponible.
+
+El desempeño de la inferencia se caracteriza mediante métricas complementarias. El tiempo hasta el primer \textit{token} (TTFT) mide la latencia que percibe el usuario antes de que comience la respuesta; la latencia total mide el tiempo requerido para completar una sección; el rendimiento (\textit{throughput}), expresado en \textit{tokens} por segundo, cuantifica la capacidad de procesamiento del servidor; y la memoria pico de la GPU indica el margen disponible para contextos más largos o para más solicitudes concurrentes. Motores como vLLM~\cite{kwon2023vllm} mejoran estas métricas al gestionar la caché de claves y valores en bloques de memoria no contiguos, a semejanza de la paginación en los sistemas operativos. En el marco de la configuración $C = (M, W, H, S)$, son precisamente estas métricas las que permiten caracterizar el comportamiento del sistema sobre la infraestructura concreta del proyecto.
+
+\subsection{Evaluación de la calidad y la usabilidad}
+Evaluar un sistema de generación asistida exige ir más allá de la corrección aparente del texto. La fidelidad (\textit{faithfulness}) mide en qué grado las afirmaciones de la respuesta se deducen del contexto recuperado~\cite{es2024ragas} y puede expresarse como la proporción de afirmaciones sustentadas sobre el total de afirmaciones identificadas. De manera análoga, la corrección de citas mide la proporción de referencias que apuntan al documento, la versión y la página correctos, y la tasa de abstención mide la proporción de casos sin respaldo documental en los que el sistema se abstiene adecuadamente. Estas métricas comparten un rasgo: evalúan la relación entre el texto y sus fuentes, que es precisamente la propiedad que distingue a un sílabo confiable de uno meramente plausible.
+
+La perspectiva del usuario se incorpora mediante dos instrumentos adicionales. La distancia de edición de Levenshtein~\cite{levenshtein1966} cuantifica el número mínimo de inserciones, eliminaciones y sustituciones necesarias para transformar el texto propuesto por el agente en el texto aprobado por el docente, lo que ofrece una medida objetiva del esfuerzo de corrección. La escala de usabilidad del sistema (SUS), propuesta por Brooke~\cite{brooke1996sus}, consiste en un cuestionario de diez ítems con respuestas en una escala de Likert de cinco puntos, cuyo resultado se transforma en una puntuación entre 0 y 100. Combinadas con la comparación del tiempo de elaboración manual frente al asistido, estas medidas permiten juzgar no solo si el sistema funciona, sino si resulta útil para quienes deben usarlo.
+
+\subsection{Síntesis de la fundamentación}
+La Tabla~\ref{tab:fundamentacion} relaciona los conceptos expuestos con el componente de SyllabusAI en que se aplican y con el objetivo específico al que contribuyen; las siglas OE1 a OE5 corresponden, en orden, a los objetivos específicos enunciados en la sección de objetivos.
+
+\begin{table}[htbp]
+  \centering
+  \caption{Conceptos de la fundamentación teórica y su aplicación en SyllabusAI.}
+  \label{tab:fundamentacion}
+  \footnotesize
+  \setlength{\tabcolsep}{4pt}
+  \renewcommand{\arraystretch}{1.25}
+  \begin{tabular}{|>{\raggedright\arraybackslash}p{3.8cm}|>{\raggedright\arraybackslash}p{7.2cm}|>{\centering\arraybackslash}p{1.6cm}|}
+    \hline
+    \textbf{Concepto} & \textbf{Aplicación en SyllabusAI} & \textbf{Objetivo} \\
+    \hline
+    Alineamiento constructivo~\cite{biggs1996alignment} & Reglas de cobertura de resultados de aprendizaje y detección de elementos huérfanos & OE4 \\
+    \hline
+    Modelos de lenguaje y atención~\cite{vaswani2017attention} & Generación de cada sección con Qwen3-8B y contexto acotado por sección & OE3 \\
+    \hline
+    Recuperación densa y léxica~\cite{robertson2009bm25,chen2024bgem3} & Búsqueda híbrida que reconoce tanto el significado como los códigos exactos & OE2 \\
+    \hline
+    Filtrado por metadatos & Restricción de la búsqueda a documentos vigentes por tipo, carrera y versión & OE1, OE2 \\
+    \hline
+    Generación aumentada por recuperación~\cite{lewis2020rag} & Generación condicionada a la evidencia institucional recuperada & OE2, OE3 \\
+    \hline
+    Citación y abstención~\cite{gao2023alce} & Referencias verificables por documento, versión y página; alertas ante evidencia insuficiente & OE2, OE4 \\
+    \hline
+    Agente en grafo con humano en el bucle~\cite{langgraph2024} & Flujo por secciones con herramientas cerradas y aprobación docente obligatoria & OE3 \\
+    \hline
+    Inferencia y sus métricas~\cite{kwon2023vllm} & Medición de TTFT, latencia, \textit{throughput} y memoria sobre la NVIDIA A100 & OE5 \\
+    \hline
+    Fidelidad, distancia de edición y SUS~\cite{es2024ragas,levenshtein1966,brooke1996sus} & Evaluación de la calidad, el esfuerzo de corrección y la usabilidad del prototipo & OE5 \\
+    \hline
+  \end{tabular}
+\end{table}
+\elaboradopor{Rubén Jhair Mera Cedeño}
+\fuente{Elaboración propia}
+
+En conjunto, la fundamentación muestra que cada decisión de diseño de SyllabusAI se apoya en un concepto preciso: el alineamiento constructivo define qué debe verificarse, la recuperación de información y el RAG definen de dónde procede la evidencia, el agente define cómo se organiza el trabajo, y la inferencia y la evaluación definen cómo se mide el resultado. Establecidas estas bases conceptuales, el capítulo siguiente describe la metodología con la que se desarrollará y validará el prototipo.
