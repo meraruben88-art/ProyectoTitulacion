@@ -1,3 +1,4 @@
+% !TEX program = pdflatex
 % ============================================================
 % main.tex — Plantilla genérica para usar con uti_tfm.sty
 % Requiere en la misma carpeta del proyecto:
@@ -5,8 +6,9 @@
 %   - referencias.bib
 %   - Logos/LOGO-UTI-1.png
 %
-% Compilación recomendada (por Century Gothic):
-%   XeLaTeX → BibTeX → XeLaTeX → XeLaTeX
+% Compilación (igual que el PDF de la Versión 2.0, tipografía Times):
+%   pdfLaTeX → BibTeX → pdfLaTeX → pdfLaTeX
+% (Con XeLaTeX el .sty cambia la letra a Century Gothic.)
 % ============================================================
 
 \documentclass[12pt,a4paper,oneside]{report}
@@ -80,17 +82,17 @@
 {FACULTAD DE INGENIERÍAS} % Facultad
 {INGENIERÍA EN TECNOLOGÍAS DE LA INFORMACIÓN} % Programa
 {DESARROLLO DE UN AGENTE INTELIGENTE BASADO EN RAG PARA LA CREACIÓN ASISTIDA DE SÍLABOS EN FORMATO INSTITUCIONAL (SYLLABUSAI)} % Tema / Título
-{Trabajo de Titulación modalidad Trabajo de Integración Curricular} % Texto tipo de trabajo
+{Trabajo de Integración Curricular previo a \UTIFraseTituloPortada} % Título según el género de los autores
 % Un autor:
 {\UTIDatosAutores
   {Ruben Jhair Mera Cedeño}{masculino}{1751595990}
-  {Pinchincha, Quito, Comité del Pueblo, Comité del pueblo}{rmera3@indoamerica.edu.ec}{0988490782}}
+  {Pinchincha, Quito, Comité del pueblo}{rmera3@indoamerica.edu.ec}{0988490782}}
 % Dos autores:
 %{\UTIDatosAutores
- % {Nombres Apellidos}{femenino}{0000000000}
-  %{Provincia, ciudad, parroquia, barrio}{correo1@ejemplo.com}{0999999999}
-  %[Nombres Apellidos][femenino][0000000000]
-  %[<Provincia, ciudad, parroquia, barrio][correo2@ejemplo.com][0999999999]} % Autor/a(s)
+%  {Nombres Apellidos}{femenino}{0000000000}
+%  {Provincia, ciudad, parroquia, barrio}{correo1@ejemplo.com}{0999999999}
+%  [Nombres Apellidos][femenino][0000000000]
+%  [Provincia, ciudad, parroquia, barrio][correo2@ejemplo.com][0999999999]} % Autor/a(s)
 {\UTIDatosTutor{Andrés Xavier Rubio Proaño}{masculino}} % Tutor/a
 {Quito, Ecuador} % Ciudad, País
 {2026} % Año
