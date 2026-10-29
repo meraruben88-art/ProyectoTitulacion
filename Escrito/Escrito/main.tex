@@ -18,6 +18,10 @@
 
 % Referencias IEEE desde .bib (usa BibTeX)
 \usepackage{array} % alineación de columnas p{} en tablas
+\usepackage{pifont} % símbolos de cumplimiento en tablas comparativas
+\newcommand{\cmark}{\ding{51}}       % cumple
+\newcommand{\xmark}{\ding{55}}       % no cumple
+\newcommand{\pmark}{\ensuremath{\sim}} % cumple parcialmente
 \usepackage[hidelinks]{hyperref} % opcional pero recomendado
 % Compatibilidad con FirmaEC: evita que hyperref inserte /OpenAction.
 \hypersetup{pdfstartview=}

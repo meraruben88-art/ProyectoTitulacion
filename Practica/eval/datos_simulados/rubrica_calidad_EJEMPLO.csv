@@ -1,0 +1,13 @@
+evaluador,asignatura,metodo,pertinencia,coherencia_curricular,claridad,ajuste_al_formato
+E1,ITI-501,manual,4,3,4,3
+E1,ITI-501,asistido,4,5,4,5
+E1,ITI-302,manual,3,3,4,3
+E1,ITI-302,asistido,4,5,4,5
+E1,ITI-403,manual,4,4,3,3
+E1,ITI-403,asistido,4,5,4,5
+E2,ITI-604,manual,4,3,4,4
+E2,ITI-604,asistido,4,4,4,5
+E2,ITI-405,manual,3,3,3,3
+E2,ITI-405,asistido,4,5,3,5
+E2,ITI-501,manual,4,3,4,3
+E2,ITI-501,asistido,5,4,4,5

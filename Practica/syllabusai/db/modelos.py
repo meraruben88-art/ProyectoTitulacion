@@ -115,6 +115,10 @@ class Asignatura(Base):
     creditos: Mapped[int | None]
     # Códigos de las asignaturas prerrequisito.
     prerrequisitos: Mapped[list[str]] = mapped_column(default=list)
+    # Datos curriculares importados de la malla aprobada y bloqueados en el sílabo (Propuesta
+    # 2026, campos tipo A y B): horas por componente, RA oficiales, contenidos mínimos, etc.
+    # Se valida con `syllabusai.esquemas.FichaCurricular`.
+    ficha: Mapped[dict[str, Any]] = mapped_column(default=dict)
 
     silabos: Mapped[list["Silabo"]] = relationship(back_populates="asignatura")
 
@@ -170,6 +174,9 @@ class VersionSeccion(Base):
     n: Mapped[int]
     origen: Mapped[OrigenVersion] = mapped_column(_enum(OrigenVersion))
     contenido: Mapped[dict[str, Any]]
+    # Diálogo con el docente: lo que pidió para esta versión y lo que el agente respondió.
+    indicacion: Mapped[str | None] = mapped_column(Text)
+    nota: Mapped[str | None] = mapped_column(Text)
     creado: Mapped[datetime] = mapped_column(default=_ahora)
 
     seccion: Mapped[Seccion] = relationship(back_populates="versiones")

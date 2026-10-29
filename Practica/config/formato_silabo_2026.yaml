@@ -1,0 +1,153 @@
+# Formato institucional del sílabo de Proyecto Formativo (PF) — UTI 2026 (decisión D-1).
+# Fuente: «Propuesta técnica para el nuevo sílabo de Proyecto Formativo y guía paso a paso»,
+# Universidad Tecnológica Indoamérica, agosto 2026, secciones 6, 7 y 8.
+#
+# El grafo del agente lee de aquí el orden de las secciones; no está escrito en el código.
+#   tipo: importada  -> se llena con la ficha curricular aprobada, sin modelo de lenguaje.
+#   tipo: generada   -> recuperar evidencia -> generar con citas -> validar -> revisión docente.
+#   herramientas     -> conjunto cerrado de herramientas que usa la sección (RF-22).
+#   tipos_requeridos -> tipos de documento sin los cuales la sección se abstiene (RF-14).
+#   requiere_ficha   -> datos de la ficha curricular sin los cuales la sección se abstiene.
+#   requiere_datos   -> datos del formulario docente sin los cuales la sección se abstiene.
+
+nombre: Sílabo de Proyecto Formativo
+version: "2026"
+facultad: Facultad de Ingenierías
+
+secciones:
+  - clave: identificacion
+    numero: "7.1"
+    titulo: Información general
+    tipo: importada
+    herramientas: [obtener_contenidos_minimos]
+
+  - clave: anclaje_curricular
+    numero: "7.2"
+    titulo: Anclaje curricular y contribución al perfil de egreso
+    tipo: generada
+    herramientas: [identificar_competencias, consultar_normativa]
+    tipos_requeridos: [perfil_egreso]
+    consultas:
+      - "competencia específica del perfil de egreso {carrera} {asignatura}"
+      - "metacompetencias transversales ejes del modelo educativo proyecto formativo"
+      - "proyecto interdisciplinario socioformativo PIS aporte del proyecto formativo"
+    instrucciones: >
+      Transcribe sin modificar la competencia específica del perfil a la que el PF contribuye
+      directamente; si la ficha ya la trae, úsala tal cual. Redacta el desempeño profesional
+      central como verbo de actuación + proceso profesional + finalidad/valor + entorno.
+      Elige UNA metacompetencia de la lista institucional y, solo si hay evidencia clara, una
+      secundaria. Declara al menos una habilidad blanda que será ejercitada y evaluada. Declara
+      únicamente los ejes que puedan rastrearse a una actividad o evidencia y justifica cada uno.
+      El aporte al PIS indica RA + producto/evidencia, sin horas ni créditos adicionales.
+
+  - clave: problema_reto
+    numero: "7.3"
+    titulo: Problema del territorio, reto y producto integrador
+    tipo: generada
+    herramientas: [consultar_normativa]
+    tipos_requeridos: [normativa]
+    requiere_datos: [contexto_problema]
+    consultas:
+      - "problema del territorio reto formativo producto integrador proyecto formativo"
+      - "redacción del reto ¿Cómo podemos acción de mejora contexto beneficio"
+    instrucciones: >
+      Parte del contexto que describió el docente; no inventes datos, cifras ni fuentes del
+      territorio. Redacta el problema como: necesidad documentada + respuesta insuficiente +
+      actores/contexto, y ciérralo con una brecha o contradicción concreta. La pregunta reto
+      sigue la fórmula «¿Cómo podemos + acción de mejora + objeto o situación + contexto + para
+      lograr un beneficio o impacto?». El producto integrador es profesional y verificable, y
+      todas las evidencias parciales deben alimentarlo.
+
+  - clave: resultados_aprendizaje
+    numero: "7.4"
+    titulo: Resultados de aprendizaje y evidencias
+    tipo: generada
+    herramientas: [obtener_contenidos_minimos, consultar_normativa]
+    tipos_requeridos: [normativa]
+    requiere_ficha: [resultados_aprendizaje]
+    consultas:
+      - "resultados de aprendizaje evidencias de desempeño taxonomía socioformativa"
+      - "resultados de aprendizaje {asignatura}"
+    instrucciones: >
+      Los enunciados de los RA son los oficiales de la malla: cópialos EXACTAMENTE, en el mismo
+      orden y con los mismos códigos; no los reescribas. Para cada RA propone una evidencia
+      observable de desempeño profesional que alimente el producto integrador y los momentos
+      (1 a 4) en que se desarrolla y evalúa.
+
+  - clave: contenidos
+    numero: "7.5"
+    titulo: Contenidos
+    tipo: generada
+    herramientas: [obtener_contenidos_minimos, consultar_normativa]
+    tipos_requeridos: [normativa]
+    requiere_ficha: [contenidos_minimos]
+    consultas:
+      - "contenidos mínimos {asignatura}"
+      - "contenidos conceptuales procedimentales actitudinales saberes esenciales"
+    instrucciones: >
+      Transcribe primero, íntegros, los contenidos mínimos oficiales; no elimines ninguno.
+      Después organízalos y complétalos solo con lo necesario para los RA y el reto, en
+      conceptuales (saber conocer), procedimentales (saber hacer) y actitudinales/éticos
+      (saber ser y convivir). No conviertas la sección en un índice exhaustivo de manual.
+
+  - clave: planeacion_momentos
+    numero: "7.6"
+    titulo: Planeación operativa por momentos
+    tipo: generada
+    herramientas: [planificar_momentos, consultar_normativa, buscar_silabos_ejemplo]
+    tipos_requeridos: [normativa]
+    consultas:
+      - "planeación por momentos contacto docente aprendizaje autónomo práctico experimental"
+      - "uso de inteligencia artificial gobernanza ética transparencia protección de datos"
+      - "planeación por momentos evidencia semanas sílabo aprobado {carrera}"
+    instrucciones: >
+      Las horas, semanas, pesos y RA de cada momento ya vienen calculados por la herramienta
+      de planificación: respétalos. Para cada momento redacta una cadena de aprendizaje
+      encadenada al RA, al reto y al producto: contacto docente -> aprendizaje autónomo ->
+      práctica auténtica o simulada -> evidencia parcial -> retroalimentación. La política de
+      IA indica herramienta, propósito, verificación, transparencia y datos que no se ingresan,
+      o «No aplica». Distribuye los contenidos mínimos entre los momentos.
+
+  - clave: evaluacion
+    numero: "7.7"
+    titulo: Sistema de evaluación socioformativa
+    tipo: generada
+    herramientas: [disenar_evaluacion, consultar_normativa, buscar_silabos_ejemplo]
+    tipos_requeridos: [normativa]
+    consultas:
+      - "rúbrica socioformativa niveles receptivo resolutivo reflexivo crítico cocreativo"
+      - "evaluación por evidencias retroalimentación oportunidades de mejora"
+    instrucciones: >
+      Las evidencias, momentos, RA y pesos vienen de la planeación aprobada: respétalos. Para
+      cada evidencia redacta entre 2 y 4 criterios de desempeño observables y la oportunidad
+      de mejora (hasta 3 reentregas del producto final y 1 de los parciales). El verbo
+      prometido por el RA debe ser alcanzable desde el nivel mínimo de aprobación.
+
+  - clave: recursos
+    numero: "7.8"
+    titulo: Recursos, bibliografía y escenarios
+    tipo: generada
+    herramientas: [buscar_bibliografia, consultar_normativa]
+    tipos_requeridos: [normativa]
+    consultas:
+      - "bibliografía básica complementaria {asignatura}"
+      - "recursos tecnológicos herramientas de inteligencia artificial autorizadas accesibilidad"
+    instrucciones: >
+      Usa SOLO bibliografía que aparezca en la lista de candidatas o en los fragmentos; nunca
+      inventes referencias. Si no hay candidatas suficientes, deja la lista vacía. Indica las
+      herramientas de IA autorizadas con su finalidad y restricciones, los escenarios reales o
+      simulados y los ajustes de accesibilidad e inclusión.
+
+  - clave: seguimiento_mejora
+    numero: "9"
+    titulo: Seguimiento, mejora y aseguramiento
+    tipo: generada
+    herramientas: [consultar_normativa]
+    tipos_requeridos: [normativa]
+    consultas:
+      - "seguimiento mejora continua logro de resultados de aprendizaje aseguramiento de la calidad"
+    instrucciones: >
+      Describe cómo se registrará el logro de cada RA, qué acciones de mejora se prevén y qué
+      ajustes se harán el siguiente periodo. Distingue los ajustes docentes de los cambios que
+      afectan al currículo (RA, contenidos mínimos, horas, perfil, prerrequisitos), que deben
+      escalarse al Comité Curricular y no modificarse en el sílabo.

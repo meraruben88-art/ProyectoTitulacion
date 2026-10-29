@@ -6,22 +6,26 @@ En la educación superior, el sílabo constituye el punto en que el currículo d
 
 El presente proyecto se sitúa en la Universidad Tecnológica Indoamérica, concretamente en la Facultad de Ingenierías y en la carrera de Ingeniería en Tecnologías de la Información, sede Quito. En este entorno, la preparación de un sílabo obliga al docente a integrar información procedente del formato institucional, la malla curricular, el perfil de egreso, los resultados de aprendizaje, los contenidos mínimos, la normativa académica y las políticas de evaluación. Dicha información se encuentra distribuida en documentos extensos y heterogéneos, emitidos en distintos momentos y sujetos a actualizaciones. La situación actual se caracteriza, en consecuencia, por un proceso predominantemente manual, en el que la localización, la interpretación y el contraste de las fuentes dependen del esfuerzo individual de cada docente.
 
+Entre todas esas fuentes, el Modelo Educativo institucional ocupa un lugar rector, pues define qué se entiende por aprender, enseñar y evaluar en la universidad. Su trayectoria muestra una evolución sostenida: fundada en 1985 en Ambato como centro de estudios de computación y reconocida como universidad en 1998, la institución abrió su extensión en Quito en 2004, formuló en 2006 un modelo basado en el pensamiento complejo y el enfoque por competencias, lo reformó en 2018 y lo actualizó de manera estructural en 2026~\cite{uti2026modelo}. La versión vigente adopta la socioformación propuesta por Tobón~\cite{tobon2013} como fundamento pedagógico y el pensamiento complejo de Morin~\cite{morin1999} como fundamento epistemológico, se alinea con ocho Objetivos de Desarrollo Sostenible y organiza la formación en torno a siete ejes transversales, entre ellos la transformación digital y la gobernanza ética de la inteligencia artificial (Eje~5) y la evaluación socioformativa basada en evidencias (Eje~6). Lejos de ser un marco declarativo, el modelo tiene consecuencias directas sobre la redacción del sílabo, como se expone a continuación.
+
+En efecto, el Modelo Educativo 2026 convierte el Proyecto Formativo (PF) en la unidad curricular básica y le impone requisitos verificables: cada PF debe declarar una competencia alineada con el perfil de egreso, entre uno y cuatro resultados de aprendizaje redactados con tres componentes (verbo de desempeño, proceso profesional y condición de impacto), la distribución de horas entre contacto docente, aprendizaje práctico y trabajo autónomo, los contenidos esenciales y su articulación con los Proyectos Interdisciplinarios Socioformativos (PIS), que no generan créditos adicionales~\cite{uti2026modelo}. La evaluación, por su parte, se rige por una taxonomía socioformativa de cinco niveles (receptivo, resolutivo, reflexivo, crítico y cocreativo) asociados a rangos de calificación que van de 0,0--5,9 a 9--10 puntos. A partir de estas exigencias, la propuesta técnica de agosto de 2026 reorganiza el sílabo en nueve secciones y sustituye la secuencia de talleres por cuatro momentos del proyecto~\cite{uti2026propuesta}. El docente debe, por tanto, adaptar su planificación a un formato nuevo y más exigente, justo cuando la propia institución pide integrar la inteligencia artificial bajo supervisión humana en el microcurrículo.
+
 A esta necesidad académica se suma un interés investigativo que le otorga una dimensión adicional. SyllabusAI se plantea como un caso de uso aplicado derivado del proyecto LLM-CoDesign, que estudia la caracterización y el co-diseño \textit{hardware-software} de la inferencia de modelos de lenguaje. Mientras el proyecto general aborda el problema de forma amplia, este trabajo concentra el análisis en una carga real de tipo RAG, conversacional de múltiples turnos y basada en agentes, ejecutada sobre una infraestructura GPU concreta. La unidad de análisis puede representarse mediante la configuración $C = (M, W, H, S)$, donde $M$ corresponde al modelo de lenguaje, $W$ al flujo de creación de sílabos, $H$ a la GPU NVIDIA A100 y $S$ a la pila formada por el motor de inferencia, el orquestador del agente y la base vectorial. El contexto del proyecto es, por consiguiente, doble: responde a una necesidad docente y, a la vez, permite estudiar el comportamiento de una aplicación institucional en términos de calidad, latencia, memoria, recuperación y trazabilidad.
 
-La coyuntura tecnológica actual vuelve pertinente esta convergencia. La disponibilidad de modelos de lenguaje abiertos capaces de ejecutarse en infraestructura propia hace posible explorar la asistencia automatizada en la redacción de documentos académicos sin que la información institucional salga de la universidad. Sin embargo, como se examina en el estado del arte, la capacidad de redactar no equivale a la capacidad de redactar conforme a una normativa. Es en esta distancia entre lo técnicamente posible y lo institucionalmente aceptable donde se ubica el presente trabajo.
+La coyuntura tecnológica actual vuelve pertinente esta convergencia. La disponibilidad de modelos de lenguaje abiertos capaces de ejecutarse en infraestructura propia hace posible explorar la asistencia automatizada en la redacción de documentos académicos sin que la información institucional salga de la universidad. Las cifras muestran, además, que la adopción docente ya está en marcha, aunque sin orientación suficiente. La encuesta global del Digital Education Council, aplicada en 2025 a 1681 docentes de 52 instituciones de 28 países, reporta que el 61\,\% ya ha usado inteligencia artificial en su enseñanza y que el 86\,\% prevé hacerlo en el futuro; al mismo tiempo, el 80\,\% afirma que su institución no ha aclarado cómo aplicarla y solo el 4\,\% conoce plenamente unas directrices que considere completas~\cite{dec2025survey}. En la educación básica estadounidense, Gallup y la Walton Family Foundation estiman, sobre 2232 docentes, que quienes usan estas herramientas al menos una vez por semana ahorran 5,9 horas semanales, equivalentes a unas seis semanas por año escolar, pero solo el 19\,\% trabaja en escuelas con una política de uso definida~\cite{gallup2025teachers}. Sin embargo, como se examina en el estado del arte, la capacidad de redactar no equivale a la capacidad de redactar conforme a una normativa. Es en esta distancia entre lo técnicamente posible y lo institucionalmente aceptable donde se ubica el presente trabajo.
 
 \section{Estado del Arte}
 La generación automática de documentos académicos con modelos de lenguaje plantea una pregunta que excede lo puramente técnico: ¿puede un sistema producir un sílabo que sea, a la vez, fluido, fiel a la normativa vigente y verificable por el docente? La literatura reciente ofrece respuestas parciales a esta cuestión, dispersas en líneas de investigación que rara vez se integran entre sí. Por ello, la revisión se organiza en torno a los componentes que articulan la solución propuesta: primero, la generación aumentada por recuperación (RAG) y sus límites; después, la recuperación híbrida con citas y abstención; luego, los agentes que operan con herramientas, la evaluación de sistemas RAG y el uso de modelos de lenguaje en el ámbito educativo; y, finalmente, la infraestructura de inferencia local que hace viable su despliegue. En cada línea se examinan los aportes y las limitaciones de los trabajos más representativos, con el fin de extraer de ellos las decisiones de diseño de SyllabusAI.
 
 \subsection{Generación aumentada por recuperación}
-Anclar la generación en documentos externos constituye la respuesta más consolidada al carácter cerrado del conocimiento paramétrico. Lewis \textit{et al.}~\cite{lewis2020rag} formalizaron este paradigma al combinar una memoria paramétrica, un modelo generador secuencia a secuencia, con una memoria no paramétrica, un índice denso de pasajes consultado mediante el recuperador DPR~\cite{karpukhin2020dpr}. El modelo resultante superó a los generadores puramente paramétricos en tareas de preguntas abiertas y produjo respuestas más específicas y factuales; además, su conocimiento puede actualizarse reemplazando el índice sin reentrenar el modelo, una propiedad decisiva cuando la normativa institucional cambia entre períodos académicos. Sin embargo, el recuperador y el generador se ajustaron de forma conjunta sobre Wikipedia, un escenario alejado de corpus institucionales pequeños, versionados y en español. El principio resulta, por tanto, pertinente, pero su aplicación al dominio de los sílabos exige adaptaciones que la propuesta original no contempla.
+Anclar la generación en documentos externos constituye la respuesta más consolidada al carácter cerrado del conocimiento paramétrico. Lewis \textit{et al.}~\cite{lewis2020rag} formalizaron este paradigma al combinar una memoria paramétrica, un modelo generador secuencia a secuencia, con una memoria no paramétrica, un índice denso de pasajes consultado mediante el recuperador DPR~\cite{karpukhin2020dpr}. El modelo resultante superó a los generadores puramente paramétricos en tareas de preguntas abiertas, con una exactitud de 44,5\,\% en Natural Questions frente al 34,5\,\% de T5-11B sin recuperación, es decir, diez puntos porcentuales más, y produjo respuestas más específicas y factuales; además, su conocimiento puede actualizarse reemplazando el índice sin reentrenar el modelo, una propiedad decisiva cuando la normativa institucional cambia entre períodos académicos. Sin embargo, el recuperador y el generador se ajustaron de forma conjunta sobre Wikipedia, un escenario alejado de corpus institucionales pequeños, versionados y en español. El principio resulta, por tanto, pertinente, pero su aplicación al dominio de los sílabos exige adaptaciones que la propuesta original no contempla.
 
-Ahora bien, la madurez del enfoque no implica que sus problemas estén resueltos. La revisión de Gao \textit{et al.}~\cite{gao2023ragsurvey} clasifica su evolución en RAG ingenuo, RAG avanzado, que incorpora técnicas previas y posteriores a la recuperación como la reescritura de consultas y el reordenamiento, y RAG modular, e identifica como problemas abiertos la recuperación de fragmentos irrelevantes, la integración de evidencia contradictoria y la falta de métricas estandarizadas. Esta advertencia se refuerza con la revisión de Ji \textit{et al.}~\cite{ji2023hallucination}, que documenta cómo los modelos de lenguaje generan contenido fluido pero no sustentado por la fuente (alucinación), y con el estudio de Liu \textit{et al.}~\cite{liu2024lost}, que demuestra que el desempeño se degrada cuando la información relevante queda ubicada en la mitad de contextos extensos. De estos hallazgos se desprende que ampliar la ventana de contexto no sustituye a una recuperación precisa; en consecuencia, SyllabusAI genera el sílabo sección por sección y acota el número de fragmentos recuperados (top-$k$). Queda por resolver, no obstante, qué recuperar y cómo garantizar que lo generado remita efectivamente a ello.
+Ahora bien, la madurez del enfoque no implica que sus problemas estén resueltos. La revisión de Gao \textit{et al.}~\cite{gao2023ragsurvey} clasifica su evolución en RAG ingenuo, RAG avanzado, que incorpora técnicas previas y posteriores a la recuperación como la reescritura de consultas y el reordenamiento, y RAG modular, e identifica como problemas abiertos la recuperación de fragmentos irrelevantes, la integración de evidencia contradictoria y la falta de métricas estandarizadas. Esta advertencia se refuerza con la revisión de Ji \textit{et al.}~\cite{ji2023hallucination}, que documenta cómo los modelos de lenguaje generan contenido fluido pero no sustentado por la fuente (alucinación), y con el estudio de Liu \textit{et al.}~\cite{liu2024lost}, que demuestra que el desempeño se degrada cuando la información relevante queda ubicada en la mitad de contextos extensos: con 20 y 30 documentos en la entrada, la exactitud de GPT-3.5-Turbo cae más de 20\,\% y, en el peor caso, queda por debajo del 56,1\,\% que el mismo modelo obtiene sin recibir documento alguno. De estos hallazgos se desprende que ampliar la ventana de contexto no sustituye a una recuperación precisa; en consecuencia, SyllabusAI genera el sílabo sección por sección y acota el número de fragmentos recuperados (top-$k$). Queda por resolver, no obstante, qué recuperar y cómo garantizar que lo generado remita efectivamente a ello.
 
 \subsection{Recuperación híbrida, citas y abstención}
-La precisión de la recuperación depende, en primer lugar, de reconocer que no todas las consultas son semánticas. Los códigos de asignatura o de competencia (p.~ej., PE-MI-05) son identificadores exactos ante los cuales la recuperación puramente semántica falla y que los modelos léxicos clásicos como BM25~\cite{robertson2009bm25} resuelven con facilidad. En lugar de obligar a elegir entre ambos enfoques, BGE-M3~\cite{chen2024bgem3} los concilia al producir, desde un único modelo multilingüe, representaciones densas, dispersas (léxicas) y multivector, con soporte para más de cien idiomas y entradas de hasta 8192 \textit{tokens}. Por ello, constituye un candidato adecuado para la recuperación híbrida en español, aunque su desempeño deberá validarse con consultas propias del dominio.
+La precisión de la recuperación depende, en primer lugar, de reconocer que no todas las consultas son semánticas. Los códigos de asignatura o de competencia (p.~ej., PE-MI-05) son identificadores exactos ante los cuales la recuperación puramente semántica falla y que los modelos léxicos clásicos como BM25~\cite{robertson2009bm25} resuelven con facilidad. En lugar de obligar a elegir entre ambos enfoques, BGE-M3~\cite{chen2024bgem3} los concilia al producir, desde un único modelo multilingüe, representaciones densas, dispersas (léxicas) y multivector, con soporte para más de cien idiomas y entradas de hasta 8192 \textit{tokens}. Por ello, constituye un candidato adecuado para la recuperación híbrida en español, aunque su desempeño requiere validarse con consultas propias del dominio, como se hace en este trabajo.
 
-Recuperar el fragmento correcto, sin embargo, no garantiza que el texto generado lo respete. Gao \textit{et al.}~\cite{gao2023alce} propusieron ALCE, un banco de pruebas reproducible para evaluar la capacidad de los modelos de generar texto con citas. Sus resultados muestran que incluso los modelos más capaces dejan una proporción considerable de afirmaciones sin respaldo completo en las citas que proponen. Cabe concluir, entonces, que la cita no puede delegarse por completo al modelo y que su verificación requiere un mecanismo adicional.
+Recuperar el fragmento correcto, sin embargo, no garantiza que el texto generado lo respete. Gao \textit{et al.}~\cite{gao2023alce} propusieron ALCE, un banco de pruebas reproducible para evaluar la capacidad de los modelos de generar texto con citas. Sus resultados muestran que incluso los modelos más capaces dejan una proporción considerable de afirmaciones sin respaldo completo en las citas que proponen: en el conjunto ELI5, los mejores modelos carecen de respaldo completo en el 50\,\% de los casos. El problema se agrava cuando el modelo responde sin recuperación. Bhattacharyya \textit{et al.}~\cite{bhattacharyya2023fabricated} verificaron 115 referencias generadas por ChatGPT-3.5 en 30 artículos médicos y encontraron que el 47\,\% eran inventadas, el 46\,\% auténticas pero inexactas y solo el 7\,\% auténticas y exactas; Walters y Wilder~\cite{walters2023fabrication} reportaron tasas de fabricación del 55\,\% con GPT-3.5 y del 18\,\% con GPT-4. Cabe concluir, entonces, que la cita no puede delegarse por completo al modelo y que su verificación requiere un mecanismo adicional.
 
 Una alternativa consiste en enseñar al propio modelo a vigilar su salida. Asai \textit{et al.}~\cite{asai2024selfrag}, con Self-RAG, lo entrenan para decidir cuándo recuperar y para criticar su propia respuesta mediante \textit{tokens} de reflexión, con mejoras en factualidad y precisión de citas. El aporte es significativo; su costo, en cambio, resulta incompatible con el presente proyecto, pues exige un ajuste fino del modelo que está expresamente excluido del alcance. De ahí que SyllabusAI traslade la decisión de abstención y la verificación de citas a reglas explícitas fuera del modelo, que contrastan cada referencia contra el índice (documento, versión, sección y página). Este desplazamiento del control hacia componentes externos al modelo conduce, de manera natural, a la cuestión de los agentes.
 
@@ -36,7 +40,10 @@ Evaluar un sistema RAG exige medir no solo si la respuesta es pertinente, sino s
 \subsection{Modelos de lenguaje en educación y alineación curricular}
 La utilidad de los modelos de lenguaje para la docencia es ampliamente reconocida; lo que permanece en discusión es la fiabilidad de lo que producen. Kasneci \textit{et al.}~\cite{kasneci2023chatgpt} analizan sus oportunidades para los docentes, entre ellas el apoyo a la planificación de clases y la elaboración de materiales, y advierten a la vez sobre sus riesgos: sesgos, contenido incorrecto, dependencia excesiva y la necesidad de que el docente mantenga el control sobre el resultado. El caso del sílabo ilustra bien esta tensión, ya que un asistente conversacional de propósito general puede redactar un documento plausible, pero no conoce la normativa, la malla ni el perfil de egreso de una institución concreta, ni verifica que el texto cumpla un formato oficial. La plausibilidad, en consecuencia, no basta: se requiere un criterio explícito de calidad.
 
-Ese criterio proviene de la teoría del alineamiento constructivo de Biggs~\cite{biggs1996alignment}, según la cual los resultados de aprendizaje, las actividades de enseñanza y las tareas de evaluación deben ser coherentes entre sí. Lejos de quedar como un principio pedagógico abstracto, esta coherencia puede traducirse en condiciones comprobables. SyllabusAI la convierte en reglas verificables: cada resultado de aprendizaje debe estar cubierto por al menos un contenido, una actividad y un instrumento de evaluación, sin elementos huérfanos. De este modo, la calidad del sílabo deja de depender del juicio del modelo y pasa a contrastarse con un estándar pedagógico reconocido.
+El trabajo más cercano al presente proyecto confirma esta tensión con datos. Yao \textit{et al.}~\cite{yao2025instructional} propusieron Instructional Agents, un marco multiagente que genera sílabos, diapositivas, guiones de clase y evaluaciones, y lo probaron en cinco cursos universitarios de computación con cinco revisores expertos por curso. En modo autónomo, el sistema produjo los materiales en 2,23 horas de cómputo, con un costo de 0,22 dólares y sin intervención humana, pero obtuvo puntuaciones de 2,73 a 3,22 sobre 5; en modo copiloto, con 30 a 45 minutos de participación docente, alcanzó entre 3,55 y 3,98, a cambio de 4,73 horas de cómputo y 0,36 dólares. Con modelos abiertos como Qwen2.5-72B, la puntuación descendió a 2,74, frente a 3,01 de GPT-4o-mini en el mismo modo autónomo. Dos conclusiones se desprenden de estas cifras: la participación del docente eleva la calidad entre 0,66 y 0,82 puntos según el curso, y los modelos abiertos necesitan apoyos adicionales, como la recuperación de fuentes, para acercarse a los comerciales. Ahora bien, ese trabajo no recupera normativa institucional, no verifica citas ni comprueba un formato oficial, vacío que SyllabusAI cubre.
+
+
+Ese criterio proviene de la teoría del alineamiento constructivo de Biggs~\cite{biggs1996alignment}, según la cual los resultados de aprendizaje, las actividades de enseñanza y las tareas de evaluación deben ser coherentes entre sí, y se concreta en la institución mediante los requisitos del Modelo Educativo 2026: entre uno y cuatro resultados de aprendizaje por PF, evidencias de desempeño para cada uno y una rúbrica de cinco niveles~\cite{uti2026modelo}. Lejos de quedar como un principio pedagógico abstracto, esta coherencia puede traducirse en condiciones comprobables. SyllabusAI la convierte en reglas verificables: cada resultado de aprendizaje debe estar cubierto por al menos un contenido, una actividad y un instrumento de evaluación, sin elementos huérfanos. De este modo, la calidad del sílabo deja de depender del juicio del modelo y pasa a contrastarse con un estándar pedagógico reconocido.
 
 \subsection{Infraestructura de inferencia y procesamiento documental}
 Ninguna de las decisiones anteriores sería sostenible si el sistema dependiera de servicios externos, pues se exige que ningún documento institucional salga de la infraestructura propia. Esta restricción, lejos de ser un obstáculo, puede atenderse con la tecnología disponible. Motores como vLLM~\cite{kwon2023vllm} hacen viable el despliegue local de modelos abiertos: su mecanismo PagedAttention gestiona la caché de claves y valores en bloques no contiguos, reduce la fragmentación de memoria y eleva el \textit{throughput} entre dos y cuatro veces frente a sistemas previos con una latencia comparable. A ello se suma la familia Qwen3~\cite{yang2025qwen3}, que ofrece modelos densos y de mezcla de expertos que integran los modos de razonamiento y de respuesta directa en un mismo modelo, con soporte multilingüe, lo que permite ejecutar la variante de 8B parámetros en una sola GPU NVIDIA A100. La inferencia local resulta, por tanto, no solo posible, sino eficiente con recursos acotados.
@@ -44,7 +51,7 @@ Ninguna de las decisiones anteriores sería sostenible si el sistema dependiera 
 Queda, sin embargo, un eslabón previo del que depende toda la cadena: la calidad de la recuperación está condicionada por la fidelidad con que se extraen los documentos fuente. Las mallas curriculares y los contenidos mínimos contienen tablas cuya estructura transporta significado, de modo que una extracción plana destruiría información esencial. Docling~\cite{auer2024docling} resuelve este problema al convertir documentos PDF a formatos estructurados mediante el análisis del diseño de página y el reconocimiento de la estructura de tablas, lo que conserva su organización al momento de indexarlos. Sin esta capacidad, el resto del sistema operaría sobre fragmentos desordenados y las citas verificables perderían su referente.
 
 \subsection{Síntesis comparativa}
-Contrastar los trabajos revisados permite advertir que cada uno resuelve una parte del problema y deja abierta otra. La Tabla~\ref{tab:estado_arte} resume sus ventajas, sus limitaciones y la manera en que cada uno se incorpora al diseño de SyllabusAI.
+Contrastar los trabajos revisados permite advertir que cada uno resuelve una parte del problema y deja abierta otra. La comparación se presenta en tres niveles complementarios. La Tabla~\ref{tab:estado_arte} resume, de forma cualitativa, las ventajas, las limitaciones y la manera en que cada trabajo se incorpora al diseño de SyllabusAI; la Tabla~\ref{tab:parametros_arte} los contrasta frente a nueve parámetros de comparación derivados de los requisitos del sílabo institucional; y la Tabla~\ref{tab:cifras_arte} reúne los resultados cuantitativos que cada trabajo reporta junto con el indicador o la meta que SyllabusAI adopta en respuesta.
 
 \begin{table}[htbp]
   \centering
@@ -73,12 +80,91 @@ Contrastar los trabajos revisados permite advertir que cada uno resuelve una par
     \hline
     LLM en educación~\cite{kasneci2023chatgpt} & Apoyo a la planificación docente & Contenido no verificado ni institucional & Docente como responsable final del sílabo \\
     \hline
+    Instructional Agents~\cite{yao2025instructional} & Genera materiales completos de curso; el modo copiloto mejora la calidad & Sin recuperación de normativa ni verificación de citas o formato & Confirma el valor de la aprobación docente por etapas \\
+    \hline
     vLLM~\cite{kwon2023vllm} & Alto \textit{throughput} y uso eficiente de memoria & Requiere GPU dedicada & Motor de inferencia local sobre la A100 \\
     \hline
+    \textbf{SyllabusAI (este trabajo)} & Integra recuperación por vigencia, citas verificables, abstención, reglas curriculares y aprobación docente, en local & Validado en una carrera, un formato y un modelo de 8B parámetros & Propuesta del presente trabajo \\
+    \hline
   \end{tabular}
+  \par\vspace{6pt}\normalsize\justifying
+  \elaboradopor{Rubén Jhair Mera Cedeño}
+  \fuente{Elaboración propia}
 \end{table}
-\elaboradopor{Rubén Jhair Mera Cedeño}
-\fuente{Elaboración propia}
+
+Los parámetros de comparación de la Tabla~\ref{tab:parametros_arte} no se eligieron de manera arbitraria: cada uno traduce una exigencia del sílabo institucional en una propiedad observable del sistema. Así, el control de vigencia responde a la actualización periódica de la normativa; las citas y la abstención, a la necesidad de que cada afirmación remita a un documento oficial; la supervisión humana, a la responsabilidad del docente; y el dominio curricular, a los requisitos del Modelo Educativo 2026. Se emplea \cmark{} cuando el trabajo cumple el parámetro, \pmark{} cuando lo cumple parcialmente o no lo evalúa de manera explícita, y \xmark{} cuando no lo contempla.
+
+\begin{table}[htbp]
+  \centering
+  \caption{Comparación por parámetros de los trabajos revisados y de SyllabusAI.}
+  \label{tab:parametros_arte}
+  \footnotesize
+  \setlength{\tabcolsep}{3pt}
+  \renewcommand{\arraystretch}{1.3}
+  \begin{tabular}{|>{\raggedright\arraybackslash}p{3.0cm}|*{9}{>{\centering\arraybackslash}p{0.78cm}|}>{\centering\arraybackslash}p{0.9cm}|}
+    \hline
+    \textbf{Trabajo} & \textbf{C1} & \textbf{C2} & \textbf{C3} & \textbf{C4} & \textbf{C5} & \textbf{C6} & \textbf{C7} & \textbf{C8} & \textbf{C9} & \textbf{Total} \\
+    \hline
+    RAG~\cite{lewis2020rag} & \cmark & \xmark & \xmark & \xmark & \xmark & \xmark & \xmark & \xmark & \pmark & 1 \\
+    \hline
+    BGE-M3~\cite{chen2024bgem3} & \cmark & \cmark & \xmark & \xmark & \xmark & \cmark & \xmark & \xmark & \cmark & 4 \\
+    \hline
+    ALCE~\cite{gao2023alce} & \cmark & \xmark & \xmark & \cmark & \xmark & \cmark & \xmark & \xmark & \pmark & 3 \\
+    \hline
+    Self-RAG~\cite{asai2024selfrag} & \cmark & \xmark & \xmark & \cmark & \pmark & \xmark & \xmark & \xmark & \cmark & 3 \\
+    \hline
+    ReAct~\cite{yao2023react} & \cmark & \xmark & \xmark & \pmark & \xmark & \cmark & \pmark & \xmark & \xmark & 2 \\
+    \hline
+    Asistente general en educación~\cite{kasneci2023chatgpt} & \xmark & \xmark & \xmark & \xmark & \xmark & \cmark & \pmark & \pmark & \xmark & 1 \\
+    \hline
+    Instructional Agents~\cite{yao2025instructional} & \pmark & \xmark & \xmark & \xmark & \xmark & \cmark & \cmark & \cmark & \pmark & 3 \\
+    \hline
+    \textbf{SyllabusAI} & \cmark & \cmark & \cmark & \cmark & \cmark & \cmark & \cmark & \cmark & \cmark & \textbf{9} \\
+    \hline
+  \end{tabular}
+  \par\vspace{4pt}\justifying
+  \noindent\textbf{Parámetros:} C1, recuperación de fuentes externas; C2, recuperación híbrida (densa y léxica); C3, control de vigencia y versión documental; C4, citas verificables; C5, abstención ante evidencia insuficiente; C6, funcionamiento sin ajuste fino del modelo; C7, supervisión humana por etapas; C8, orientación al dominio educativo y curricular; C9, ejecución local con un modelo abierto. Total: número de parámetros cumplidos plenamente. En el caso de SyllabusAI, los parámetros corresponden a funcionalidades incorporadas en su diseño.
+  \par\vspace{6pt}\normalsize\justifying
+  \elaboradopor{Rubén Jhair Mera Cedeño}
+  \fuente{Elaboración propia a partir de los trabajos citados}
+\end{table}
+
+La lectura de la tabla es elocuente: ninguno de los trabajos revisados cumple plenamente más de cuatro de los nueve parámetros, es decir, menos del 45\,\% de los requisitos, frente al 100\,\% que integra SyllabusAI; el promedio de los siete trabajos es de 2,4 parámetros, apenas un 27\,\%, y ninguno aborda el control de vigencia documental (C3), un requisito indispensable cuando la normativa cambia entre períodos. Las cifras de la Tabla~\ref{tab:cifras_arte} precisan, además, la magnitud de los riesgos que cada decisión de diseño mitiga.
+
+\begin{table}[htbp]
+  \centering
+  \caption{Resultados cuantitativos reportados por los trabajos revisados y su contraparte en SyllabusAI.}
+  \label{tab:cifras_arte}
+  \footnotesize
+  \setlength{\tabcolsep}{3pt}
+  \renewcommand{\arraystretch}{1.25}
+  \begin{tabular}{|>{\raggedright\arraybackslash}p{2.2cm}|>{\raggedright\arraybackslash}p{2.5cm}|>{\raggedright\arraybackslash}p{2.6cm}|>{\raggedright\arraybackslash}p{2.6cm}|>{\raggedright\arraybackslash}p{2.9cm}|}
+    \hline
+    \textbf{Trabajo} & \textbf{Prueba o dominio} & \textbf{Indicador} & \textbf{Valor reportado} & \textbf{Respuesta en SyllabusAI} \\
+    \hline
+    RAG~\cite{lewis2020rag} & Natural Questions & Exactitud de la respuesta & 44,5\,\% frente a 34,5\,\% sin recuperación & Recall@5 $\geq$ 85\,\% sobre consultas anotadas (meta) \\
+    \hline
+    Liu \textit{et al.}~\cite{liu2024lost} & Preguntas con 20 y 30 documentos & Caída por posición de la evidencia & Más de 20\,\%; peor caso bajo 56,1\,\% & Generación por sección con top-$k$ acotado \\
+    \hline
+    BGE-M3~\cite{chen2024bgem3} & Más de 100 idiomas & Longitud máxima de entrada & 8192 \textit{tokens} & Codificador híbrido para el español \\
+    \hline
+    ALCE~\cite{gao2023alce} & ELI5 & Respuestas sin respaldo completo & 50\,\% & Corrección de citas $\geq$ 95\,\% (meta) \\
+    \hline
+    Bhattacharyya \textit{et al.}~\cite{bhattacharyya2023fabricated} & 30 artículos, 115 referencias & Referencias auténticas y exactas & 7\,\% (47\,\% inventadas) & Cada cita se contrasta contra el índice \\
+    \hline
+    Walters y Wilder~\cite{walters2023fabrication} & Referencias generadas & Referencias fabricadas & 55\,\% (GPT-3.5); 18\,\% (GPT-4) & Abstención $\geq$ 90\,\% sin evidencia (meta) \\
+    \hline
+    Instructional Agents~\cite{yao2025instructional} & 5 cursos universitarios & Calidad (1--5) y tiempo de cómputo & Autónomo: 2,73--3,22 (2,23~h); copiloto: 3,55--3,98 (4,73~h) & Aprobación docente por sección; latencia $\leq$ 60~s por sección (meta) \\
+    \hline
+    vLLM~\cite{kwon2023vllm} & Servicio de LLM & \textit{Throughput} frente a sistemas previos & 2 a 4 veces mayor & Servidor de inferencia sobre la A100 \\
+    \hline
+    \textbf{SyllabusAI} & Sílabos de la UTI & Fidelidad, SUS y reducción del tiempo & Metas: $\geq$ 90\,\%, $\geq$ 70 y $\geq$ 50\,\% & Criterios de aceptación del agente \\
+    \hline
+  \end{tabular}
+  \par\vspace{6pt}\normalsize\justifying
+  \elaboradopor{Rubén Jhair Mera Cedeño}
+  \fuente{Elaboración propia a partir de los trabajos citados}
+\end{table}
 
 La revisión permite responder a la pregunta inicial: los componentes técnicos necesarios para generar sílabos fiables están maduros por separado, pero no se identificó una solución que los integre bajo una normativa institucional concreta. Los asistentes generales no recuperan documentos vigentes ni verifican el formato; las propuestas de investigación más avanzadas en citas y autocrítica dependen del ajuste fino, y los agentes autónomos no contemplan la aprobación humana por etapas. SyllabusAI se ubica precisamente en esa brecha: integra recuperación filtrada por vigencia y versión, abstención explícita, citas verificables, reglas de alineamiento curricular y aprobación docente, ejecutados de forma local con un modelo abierto. Identificada la brecha en la literatura, corresponde precisar cómo se manifiesta en la práctica, tarea que aborda el planteamiento del problema.
 
@@ -89,9 +175,9 @@ La primera causa reside en la dispersión y la heterogeneidad de las fuentes. La
 
 La segunda causa es la ausencia de mecanismos que integren estas fuentes y verifiquen su coherencia. En la práctica, el docente debe localizar información, adaptar resultados de aprendizaje, distribuir contenidos, diseñar actividades y comprobar que la evaluación sea coherente con los objetivos formativos, sin un apoyo que relacione automáticamente unos elementos con otros. La verificación del alineamiento entre resultados de aprendizaje, contenidos, actividades y evaluación, así como la consistencia de horas y ponderaciones, recae por completo en la revisión humana. Cuando una tarea de control depende únicamente de la atención individual, su calidad varía con la experiencia, el tiempo disponible y la carga de trabajo de quien la realiza.
 
-Una tercera causa, más reciente, agrava las dos anteriores: el recurso a asistentes conversacionales de propósito general. Un modelo de lenguaje utilizado sin acceso a las fuentes institucionales puede generar textos plausibles, pero no necesariamente correctos ni alineados con la normativa vigente. Lejos de resolver la dispersión documental, este uso la oculta, ya que produce un documento de apariencia acabada cuyas afirmaciones no remiten a ningún documento verificable. El riesgo, por consiguiente, ya no es solo la omisión, sino la incorporación de contenido erróneo bajo una forma convincente.
+Una tercera causa, más reciente, agrava las dos anteriores: el recurso a asistentes conversacionales de propósito general. Un modelo de lenguaje utilizado sin acceso a las fuentes institucionales puede generar textos plausibles, pero no necesariamente correctos ni alineados con la normativa vigente. Lejos de resolver la dispersión documental, este uso la oculta, ya que produce un documento de apariencia acabada cuyas afirmaciones no remiten a ningún documento verificable. Las cifras revisadas en el estado del arte dimensionan este riesgo: sin recuperación, solo el 7\,\% de las referencias generadas por ChatGPT-3.5 resultó auténtico y exacto~\cite{bhattacharyya2023fabricated}, y el 80\,\% de los docentes encuestados en 2025 declara no contar con orientaciones institucionales claras para usar la inteligencia artificial en la enseñanza~\cite{dec2025survey}. El riesgo, por consiguiente, ya no es solo la omisión, sino la incorporación de contenido erróneo bajo una forma convincente.
 
-Estas causas se traducen en efectos que afectan tanto al docente como a la institución. En el plano del docente, el proceso puede consumir varias horas por asignatura, tiempo que se resta a actividades de mayor valor pedagógico. En el plano del documento, el resultado son sílabos con diferencias de estilo, campos incompletos o relaciones curriculares poco explícitas, lo que dificulta compararlos entre sí y revisarlos de manera sistemática. En el plano institucional, la falta de trazabilidad impide reconstruir de qué documento y de qué versión procede cada afirmación, de manera que el uso inadvertido de una normativa desactualizada puede pasar desapercibido hasta etapas tardías de revisión. Los efectos, en suma, no se limitan a la eficiencia: comprometen la calidad y la auditabilidad de un documento oficial.
+Estas causas se traducen en efectos que afectan tanto al docente como a la institución. En el plano del docente, el proceso puede consumir varias horas por asignatura, tiempo que se resta a actividades de mayor valor pedagógico. Las mediciones directas del tiempo de elaboración de sílabos son escasas en la literatura, pero las estimaciones disponibles permiten dimensionarlo. La Universidad de Texas en Dallas asigna cuatro horas solo a la redacción del sílabo dentro de las 128,5 horas que estima para desarrollar un curso en línea de dos o tres créditos~\cite{utd2019faq}; en el ámbito de la formación profesional, el estudio de Chapman Alliance sobre 249 organizaciones calculó un promedio de 43 horas de diseño por cada hora de formación presencial~\cite{chapman2010}. A ello se suma la presión de la jornada: un estudio de la Universidad Estatal de Boise registró un promedio de 61 horas semanales de trabajo docente, de las cuales solo el 35\,\% correspondía a la enseñanza y entre el 11 y el 12\,\% a la administración de cursos~\cite{flaherty2014}. Si se toma como referencia la estimación de cuatro horas por sílabo, una carrera que oferte cuarenta asignaturas en un período destinaría, a modo ilustrativo, unas 160 horas docentes por período únicamente a esta tarea, cifra que crece cuando un formato nuevo, como el de nueve secciones propuesto en 2026, obliga a rehacer los sílabos existentes. En el plano del documento, el resultado son sílabos con diferencias de estilo, campos incompletos o relaciones curriculares poco explícitas, lo que dificulta compararlos entre sí y revisarlos de manera sistemática. En el plano institucional, la falta de trazabilidad impide reconstruir de qué documento y de qué versión procede cada afirmación, de manera que el uso inadvertido de una normativa desactualizada puede pasar desapercibido hasta etapas tardías de revisión. Los efectos, en suma, no se limitan a la eficiencia: comprometen la calidad y la auditabilidad de un documento oficial.
 
 De lo expuesto se desprende que el problema central puede formularse de la siguiente manera: la elaboración de sílabos en la carrera depende de un proceso manual que integra con dificultad fuentes institucionales dispersas y versionadas, que no garantiza la trazabilidad de su contenido ni la verificación sistemática de su coherencia curricular, y para el cual las herramientas generales de inteligencia artificial no ofrecen garantías de fidelidad normativa. Esta formulación conduce a la pregunta que orienta el trabajo: ¿cómo asistir al docente en la elaboración de sílabos de manera que se reduzca el tiempo de preparación sin sacrificar la fidelidad a las fuentes vigentes, la trazabilidad ni su responsabilidad sobre el resultado?
 
@@ -102,25 +188,55 @@ Desde el punto de vista técnico, el proyecto aporta una respuesta concreta a lo
 
 En el plano operativo, la utilidad de la solución se expresa en tres dimensiones complementarias. La primera es el tiempo: al recuperar automáticamente la información pertinente y proponer el contenido sección por sección, el docente deja de buscar y pasa a revisar. La segunda es la consistencia: las reglas de validación de estructura, completitud y coherencia curricular homogenizan los sílabos y detectan omisiones antes de la exportación. La tercera es la trazabilidad: cada sección conserva el registro de los documentos, versiones y páginas que la sustentan, lo que facilita la revisión por parte de coordinadores y responsables curriculares. Ninguna de estas ventajas sustituye el criterio docente; por el contrario, el principio que guía el sistema es que el agente propone y verifica, mientras el docente revisa, corrige y aprueba.
 
+La dimensión del tiempo merece una cuantificación propia, pues es la que el docente percibe de manera más inmediata. La Tabla~\ref{tab:tiempos} contrasta las estimaciones y mediciones disponibles en otras instituciones con las metas de desempeño de SyllabusAI. Sus cifras no son estrictamente comparables, ya que difieren en el alcance del material elaborado y en el método de medición; aun así, coinciden en una tendencia: la asistencia con modelos de lenguaje reduce el tiempo de elaboración de horas a minutos, siempre que el docente conserve la revisión final.
+
+\begin{table}[htbp]
+  \centering
+  \caption{Tiempos de elaboración reportados en otras instituciones y metas de SyllabusAI.}
+  \label{tab:tiempos}
+  \footnotesize
+  \setlength{\tabcolsep}{3pt}
+  \renewcommand{\arraystretch}{1.25}
+  \begin{tabular}{|>{\raggedright\arraybackslash}p{2.5cm}|>{\raggedright\arraybackslash}p{2.6cm}|>{\raggedright\arraybackslash}p{2.6cm}|>{\raggedright\arraybackslash}p{2.7cm}|>{\raggedright\arraybackslash}p{2.4cm}|}
+    \hline
+    \textbf{Fuente} & \textbf{Contexto} & \textbf{Sin asistencia} & \textbf{Con asistencia} & \textbf{Tipo de dato} \\
+    \hline
+    Univ. de Texas en Dallas~\cite{utd2019faq} & Curso en línea de 2 o 3 créditos & 4~h para el sílabo; 128,5~h para el curso completo & No aplica & Estimación institucional \\
+    \hline
+    Chapman Alliance~\cite{chapman2010} & 249 organizaciones de formación & 43~h de diseño por hora de formación presencial & No aplica & Encuesta \\
+    \hline
+    Gallup y Walton Family Foundation~\cite{gallup2025teachers} & 2232 docentes de educación básica (EE.~UU.) & No reportado & Ahorro de 5,9~h por semana en usuarios semanales & Autoinforme \\
+    \hline
+    Yao \textit{et al.}~\cite{yao2025instructional} & 5 cursos universitarios & No reportado & 2,23 a 4,73~h de cómputo y 0 a 45~min de revisión docente & Medición experimental \\
+    \hline
+    \textbf{SyllabusAI (meta)} & Sílabos de la UTI & Proceso manual del docente & $\leq$ 60~s por sección ($\leq$ 9~min para 9 secciones) más revisión docente; reducción $\geq$ 50\,\% & Meta de diseño \\
+    \hline
+  \end{tabular}
+  \par\vspace{6pt}\normalsize\justifying
+  \elaboradopor{Rubén Jhair Mera Cedeño}
+  \fuente{Elaboración propia a partir de las fuentes citadas}
+\end{table}
+
+Frente a estas referencias, SyllabusAI fija metas explícitas y medibles: reducir en al menos un 50\,\% el tiempo de elaboración respecto del proceso manual, generar cada sección en 60 segundos o menos, alcanzar un Recall@5 de al menos 85\,\%, una fidelidad a las fuentes de al menos 90\,\%, una corrección de citas de al menos 95\,\%, una tasa de abstención adecuada de al menos 90\,\% ante evidencia insuficiente y una puntuación SUS de al menos 70 puntos, umbral asociado a una usabilidad aceptable~\cite{bangor2008sus}. Aplicada sobre la estimación de cuatro horas por sílabo, la meta de tiempo equivale a recuperar al menos dos horas por asignatura y, en el escenario ilustrativo de cuarenta asignaturas, a liberar unas 80 horas docentes por período. Estas metas constituyen los criterios de aceptación con los que se evalúa el agente.
+
 Los beneficiarios de la propuesta se distinguen según su cercanía con el uso del sistema. Los beneficiarios directos son los docentes de la carrera de Ingeniería en Tecnologías de la Información, quienes disponen de un asistente que reduce la carga de búsqueda y verificación, y los responsables curriculares, que obtienen sílabos más homogéneos y trazables. Los beneficiarios indirectos son, en primer lugar, los estudiantes, que reciben una planificación coherente con el perfil de egreso; en segundo lugar, la institución, que fortalece la calidad documental de sus procesos académicos; y, finalmente, el proyecto de investigación LLM-CoDesign, que obtiene datos reales de calidad, latencia, memoria y recuperación sobre una carga de trabajo institucional. El alcance de los beneficios trasciende así al usuario inmediato del sistema.
 
-La factibilidad técnica del proyecto descansa en la madurez de las tecnologías que lo componen y en la disponibilidad de la infraestructura necesaria. El prototipo se ejecutará localmente sobre una GPU NVIDIA A100, con un modelo de lenguaje abierto (Qwen3-8B) servido mediante vLLM, una base vectorial para el almacenamiento de fragmentos, LangGraph para la orquestación del agente y herramientas de procesamiento documental como PyMuPDF, Docling y python-docx. Estas tecnologías cuentan con documentación pública y no exigen entrenar ni ajustar el modelo, lo que reduce de manera considerable la complejidad y el costo del desarrollo. La ejecución local, además, permite cumplir el requisito de que ningún documento institucional salga a servicios externos.
+La factibilidad técnica del proyecto descansa en la madurez de las tecnologías que lo componen y en la disponibilidad de la infraestructura necesaria. El agente se ejecuta localmente sobre una GPU NVIDIA A100, con un modelo de lenguaje abierto (Qwen3-8B) servido mediante vLLM, una base vectorial para el almacenamiento de fragmentos, LangGraph para la orquestación del agente y herramientas de procesamiento documental como PyMuPDF, Docling y python-docx. Estas tecnologías cuentan con documentación pública y no exigen entrenar ni ajustar el modelo, lo que reduce de manera considerable la complejidad y el costo del desarrollo. La ejecución local, además, permite cumplir el requisito de que ningún documento institucional salga a servicios externos.
 
-La factibilidad operativa, por su parte, se asegura mediante un alcance deliberadamente acotado. El piloto se limita a una carrera, un único formato institucional y entre tres y cinco asignaturas, con documentos oficiales vigentes identificados por fecha y versión, y una validación con un grupo reducido de docentes o expertos curriculares. Esta delimitación permite completar el desarrollo en el plazo estimado de doce semanas y, al mismo tiempo, obtener evidencia suficiente para evaluar la calidad, la utilidad, la trazabilidad, la usabilidad y el rendimiento del prototipo. Asimismo, el sistema no se integra con los sistemas académicos productivos ni modifica procesos administrativos, de modo que su adopción experimental no interfiere con la operación habitual de la institución.
+La factibilidad operativa, por su parte, se asegura mediante un alcance deliberadamente acotado. El agente trabaja con un único formato institucional y con documentos oficiales vigentes identificados por fecha y versión, y su evaluación se realiza sobre tres a cinco asignaturas con un grupo reducido de docentes o expertos curriculares. Esta delimitación permite completar el desarrollo en doce semanas y, al mismo tiempo, obtener evidencia suficiente para evaluar la calidad, la utilidad, la trazabilidad, la usabilidad y el rendimiento del agente. Asimismo, el sistema no se integra con los sistemas académicos productivos ni modifica procesos administrativos, de modo que su adopción experimental no interfiere con la operación habitual de la institución.
 
 Por último, el proyecto se justifica desde la formación profesional del autor. La propuesta se alinea con las competencias del perfil de egreso de la carrera, entre ellas la aplicación de teorías, metodologías, estándares y tecnologías para crear soluciones de software (PE-MI-05), el uso de normas y estándares de calidad de ingeniería en tecnologías de la información (PE-MI-06) y el desarrollo de aplicaciones informáticas de vanguardia para procesar información y automatizar procesos (PE-PP-04). En suma, SyllabusAI es pertinente porque responde a una necesidad institucional real, técnicamente viable porque se apoya en tecnologías maduras y formativamente valioso porque recorre el ciclo completo de la ingeniería de software aplicada a la inteligencia artificial.
 
 \section{Objetivos}
 \subsection{Objetivo General}
-Desarrollar y evaluar un agente inteligente basado en RAG que asista a los docentes en la creación de sílabos alineados con el formato, la normativa y los documentos curriculares institucionales.
+Desarrollar un agente inteligente, mediante la consulta de los documentos curriculares vigentes y la aprobación docente de cada sección, para asistir a los docentes de la Universidad Tecnológica Indoamérica en la elaboración de sílabos trazables, coherentes y en menor tiempo.
 
 \subsection{Objetivos Específicos}
 \begin{enumerate}
-  \item Identificar, clasificar, versionar y procesar (extracción, limpieza, segmentación e indexación) los documentos institucionales requeridos para la elaboración de sílabos.
-  \item Desarrollar un sistema RAG para recuperar normativa, competencias, resultados de aprendizaje y contenidos mínimos.
-  \item Implementar un agente con herramientas especializadas para generar, revisar y exportar (DOCX/PDF) las secciones del sílabo en el formato institucional.
-  \item Incorporar reglas de validación de estructura, completitud, trazabilidad y coherencia curricular.
-  \item Evaluar la calidad, utilidad, trazabilidad, usabilidad y rendimiento del prototipo con casos de prueba y docentes.
+  \item Identificar los documentos institucionales requeridos para el sílabo, mediante su clasificación, extracción e indexación con metadatos de versión, para disponer de un corpus oficial y actualizado.
+  \item Diseñar un sistema de recuperación híbrida, mediante el modelo BGE-M3 y el filtrado por metadatos, para obtener evidencia normativa y curricular con citas verificables.
+  \item Implementar un agente con reglas de validación curricular, mediante un grafo de LangGraph con aprobación docente por sección, para generar y exportar sílabos en DOCX y PDF.
+  \item Evaluar el agente en tres a cinco asignaturas, mediante métricas de recuperación, fidelidad, tiempo y usabilidad, para determinar su calidad y utilidad docente.
 \end{enumerate}
 
 \section{Alcance del Proyecto}
@@ -140,10 +256,10 @@ En el plano funcional, el prototipo abarca el ciclo completo que va desde los do
 \end{itemize}
 Estos componentes no constituyen funciones aisladas, sino etapas encadenadas de un mismo flujo, de modo que cada una se corresponde con al menos uno de los objetivos específicos.
 
-En el plano institucional, el alcance se restringe a un escenario piloto que permite controlar las variables de la evaluación:
+En el plano institucional, el alcance se restringe a un escenario controlado que permite aislar las variables de la evaluación:
 \begin{itemize}
   \item Una carrera y un único formato institucional.
-  \item Entre tres y cinco asignaturas para la validación piloto.
+  \item Entre tres y cinco asignaturas para la validación.
   \item Documentos oficiales vigentes, identificados por fecha y versión.
   \item Generación en español.
   \item Validación con un grupo reducido de docentes o expertos curriculares.
@@ -164,7 +280,21 @@ Tan importante como lo que se incluye es lo que se excluye de manera expresa. Al
 Entre estas exclusiones, la renuncia al ajuste fino del modelo y a la aprobación automática merece subrayarse, pues condiciona el diseño: obliga a trasladar el control de calidad a reglas explícitas y a la revisión humana por etapas, tal como se argumentó en el estado del arte.
 
 \section{Fundamentación Teórica}
-Si el estado del arte permitió situar la propuesta frente a los trabajos existentes, la fundamentación teórica tiene por objeto precisar los conceptos sobre los que se construye. La exposición avanza desde el objeto del problema hacia los medios técnicos de su solución: se parte del sílabo como instrumento de planificación curricular, se continúa con los modelos de lenguaje y la recuperación de información, se describen la generación aumentada por recuperación y los agentes basados en modelos de lenguaje, y se concluye con los fundamentos de la inferencia y de la evaluación. Cada concepto se presenta en la medida en que interviene directamente en el diseño y la implementación de SyllabusAI.
+Si el estado del arte permitió situar la propuesta frente a los trabajos existentes, la fundamentación teórica tiene por objeto precisar los conceptos sobre los que se construye. La exposición avanza desde el objeto del problema hacia los medios técnicos de su solución: se parte de los fundamentos educativos, esto es, el modelo socioformativo de la institución, los niveles de concreción curricular, el sílabo y el alineamiento constructivo, los resultados de aprendizaje y sus taxonomías, la evaluación formativa y la gobernanza ética de la inteligencia artificial en la docencia; se continúa con los modelos de lenguaje y la recuperación de información, se describen la generación aumentada por recuperación y los agentes basados en modelos de lenguaje, y se concluye con los fundamentos de la inferencia y de la evaluación. Cada concepto se presenta en la medida en que interviene directamente en el diseño y la implementación de SyllabusAI.
+
+\subsection{La socioformación como fundamento pedagógico institucional}
+Antes de automatizar la redacción de un sílabo es preciso saber qué concepción de la enseñanza debe reflejar, y en la Universidad Tecnológica Indoamérica esa concepción es la socioformación. Propuesta por Tobón~\cite{tobon2013} como un enfoque latinoamericano, la socioformación entiende la formación integral como el desarrollo de competencias para resolver problemas reales del contexto con un proyecto ético de vida, de modo que el aprendizaje no constituye un fin en sí mismo, sino un medio para transformar el entorno. Su raíz epistemológica es el pensamiento complejo de Morin~\cite{morin1999}, que concibe el conocimiento como un tejido de relaciones entre disciplinas, contextos y actores, frente a una enseñanza fragmentada por asignaturas aisladas. De ahí que el enfoque privilegie la integración de saberes y la articulación entre el saber conocer, el saber hacer, el saber ser y el saber convivir.
+
+El Modelo Educativo 2026 asume este enfoque y lo concreta en una estructura precisa~\cite{uti2026modelo}. Su núcleo pedagógico articula cinco dimensiones: el estudiante, el docente, el territorio, los escenarios socioformativos y la gobernanza ética de la inteligencia artificial; a ellas se suman siete ejes transversales: formación integral, inclusión y desarrollo humano; territorialización, innovación y emprendimiento disruptivo; pensamiento complejo e interdisciplinariedad; interculturalidad crítica, justicia cognitiva e internacionalización; transformación digital y gobernanza ética de la inteligencia artificial; evaluación socioformativa y gestión basada en evidencias; y ecosistema institucional de aprendizaje y experiencia universitaria. El modelo mantiene el enfoque por competencias como base del diseño curricular, pero incorpora de forma progresiva las metacompetencias, entendidas como capacidades transversales de orden superior que integran la metacognición, la actuación ética y la toma de decisiones en escenarios complejos.
+
+En el plano curricular, esta concepción se materializa en dos figuras. El Proyecto Formativo (PF) es la unidad curricular básica y organiza la asignatura en torno a un problema o reto del territorio, con un producto verificable; el Proyecto Interdisciplinario Socioformativo (PIS) es el mecanismo que integra los aportes de varios PF de un mismo período alrededor de un problema común, sin generar créditos ni horas adicionales~\cite{uti2026modelo}. Para el sílabo, esto implica una consecuencia concreta: cada documento debe explicitar el problema del territorio, el reto, el producto integrador y su contribución al PIS, campos que no existían en los formatos tradicionales basados en temas y que la propuesta institucional de 2026 incorpora en sus nueve secciones~\cite{uti2026propuesta}. SyllabusAI debe, por tanto, recuperar y respetar estos elementos, y no limitarse a generar una lista de contenidos.
+
+\subsection{Niveles de concreción curricular y funciones del sílabo}
+El sílabo no es un documento autónomo, sino el último eslabón de una cadena de decisiones curriculares. En la literatura curricular suelen distinguirse tres niveles de concreción: el macrocurrículo, que corresponde al modelo educativo y a los lineamientos institucionales; el mesocurrículo, que se expresa en el perfil de egreso y la malla de cada carrera; y el microcurrículo, que se concreta en el sílabo de cada asignatura. Cada nivel restringe al siguiente: el sílabo no puede eliminar un contenido mínimo aprobado en la malla ni declarar una competencia ajena al perfil de egreso, tal como establece la propuesta institucional al exigir que primero se transcriban los contenidos mínimos oficiales y solo después se complementen~\cite{uti2026propuesta}. Esta jerarquía justifica que el sistema recupere los documentos de los niveles superiores antes de redactar cualquier sección.
+
+A esta restricción vertical se suma una restricción normativa nacional. El Reglamento de Régimen Académico del Consejo de Educación Superior del Ecuador establece que un crédito académico equivale a 48 horas de actividad del estudiante y que estas horas se distribuyen entre el aprendizaje en contacto con el docente, el aprendizaje práctico-experimental y el aprendizaje autónomo~\cite{ces2022rra}. Así, una asignatura de tres créditos supone 144 horas que el sílabo debe repartir entre componentes y semanas sin exceder ni omitir ninguna. La consistencia de horas deja de ser, en consecuencia, un detalle formal para convertirse en una condición de validez que puede comprobarse de manera aritmética.
+
+Dentro de estos límites, el sílabo cumple varias funciones a la vez. Parkes y Harris~\cite{parkes2002syllabus} identifican tres: es un contrato, porque fija las reglas, los plazos y los criterios de evaluación que comprometen a docentes y estudiantes; es un registro permanente, porque documenta lo que se enseñó y cómo se evaluó, lo que lo convierte en evidencia para la acreditación; y es una herramienta de aprendizaje, porque orienta al estudiante sobre qué se espera de él y cómo alcanzarlo. Cada función exige una cualidad distinta del documento: la de contrato exige claridad, la de registro exige trazabilidad y la de herramienta de aprendizaje exige coherencia pedagógica. SyllabusAI atiende las tres al combinar el formato institucional, las citas verificables y las reglas de alineamiento.
 
 \subsection{El sílabo y el alineamiento constructivo}
 El sílabo puede definirse como el documento que planifica una asignatura para un período académico, al establecer sus resultados de aprendizaje, contenidos, metodología, evaluación y bibliografía. Su función excede la de un índice temático, ya que puede entenderse como un acuerdo pedagógico entre el docente, los estudiantes y la institución, y como el nivel más concreto en que se despliega el currículo. Entre sus componentes existe, además, una jerarquía de dependencia: los resultados de aprendizaje derivan de las competencias del perfil de egreso y de los contenidos mínimos de la malla, y a su vez determinan las unidades, las actividades y los instrumentos de evaluación. Comprender esta jerarquía resulta esencial, pues de ella depende el orden en que el sistema genera las secciones.
@@ -180,6 +310,50 @@ Esta propiedad puede formalizarse. Si $R$ denota el conjunto de resultados de ap
 \addeqtolist{Condición de cobertura del alineamiento constructivo}
 
 En ella, $r \sim x$ indica que el elemento $x$ declara contribuir al resultado $r$. La condición complementaria, la ausencia de elementos huérfanos, exige que todo contenido, actividad o instrumento esté vinculado con al menos un resultado. Ambas condiciones transforman un principio pedagógico en una regla que puede evaluarse de forma automática, lo que constituye la base del módulo de validación curricular.
+
+El alineamiento se complementa con el diseño inverso (\textit{backward design}) de Wiggins y McTighe~\cite{wiggins2005ubd}, que propone planificar en tres etapas: identificar primero los resultados deseados, determinar después las evidencias aceptables de su logro y planificar, solo al final, las experiencias de aprendizaje. Este orden invierte la práctica habitual de comenzar por los temas y las actividades, y coincide con la jerarquía de dependencia descrita anteriormente. SyllabusAI adopta la misma secuencia al generar las secciones: los resultados de aprendizaje y sus evidencias preceden a los contenidos, la planeación por momentos y la evaluación.
+
+\subsection{Resultados de aprendizaje y taxonomías}
+Los resultados de aprendizaje son enunciados de lo que el estudiante será capaz de hacer al concluir un proceso formativo, y su redacción determina la calidad de todo el sílabo, pues de ellos dependen las actividades y la evaluación. Para graduar su complejidad se emplean taxonomías. La más difundida es la revisión de la taxonomía de Bloom realizada por Anderson y Krathwohl~\cite{anderson2001taxonomy}, que organiza los objetivos en una matriz de seis procesos cognitivos (recordar, comprender, aplicar, analizar, evaluar y crear) y cuatro tipos de conocimiento (factual, conceptual, procedimental y metacognitivo), es decir, 24 combinaciones posibles. Su aporte principal consiste en vincular cada nivel con verbos observables, lo que permite distinguir un resultado de baja complejidad de uno de orden superior.
+
+La Universidad Tecnológica Indoamérica adopta, en cambio, la taxonomía socioformativa, que gradúa el desempeño en cinco niveles: receptivo, resolutivo, reflexivo, crítico y cocreativo~\cite{uti2026modelo}. A diferencia de la taxonomía de Bloom, centrada en los procesos cognitivos, la socioformativa valora la capacidad de actuar frente a problemas del territorio, desde su reconocimiento inicial hasta la cocreación de soluciones con la comunidad, y asocia a cada nivel un repertorio de verbos. El modelo exige, además, que cada resultado de aprendizaje se redacte con tres componentes, verbo de desempeño en presente, proceso profesional y condición de pertinencia o impacto, que emplee verbos de mediana o alta complejidad y que cada PF declare entre uno y cuatro resultados. Estas reglas tienen una ventaja para la automatización: son verificables. Por ejemplo, el sistema puede advertir el uso de verbos temáticos de baja complejidad, como conocer o comprender, que la propuesta institucional pide evitar~\cite{uti2026propuesta}.
+
+\subsection{Evaluación formativa y socioformativa}
+La evaluación no es solo el cierre del proceso de enseñanza, sino uno de sus motores. La revisión de Black y Wiliam~\cite{black1998blackbox} sobre la evaluación formativa, entendida como aquella cuya información se usa para ajustar la enseñanza y el aprendizaje, reportó tamaños del efecto típicos de entre 0,4 y 0,7 desviaciones estándar, ganancias que se cuentan entre las mayores documentadas para una intervención educativa. De este hallazgo se deriva un criterio de diseño: un sílabo debe prever no solo cuándo se califica, sino también cuándo se retroalimenta y cuándo el estudiante puede mejorar su producto.
+
+La evaluación socioformativa del Modelo Educativo 2026 incorpora este principio y lo articula con la taxonomía de cinco niveles. Se basa en evidencias auténticas de desempeño, vinculadas con problemas reales y valoradas mediante una rúbrica institucional común, que la Tabla~\ref{tab:rubrica} resume con sus rangos de calificación~\cite{uti2026modelo}. Para otorgar una credencial, el estudiante debe alcanzar al menos el nivel crítico, de modo que los niveles receptivo y resolutivo no bastan para la acreditación. La rúbrica proporciona, así, un vocabulario cerrado y unos rangos numéricos que el sistema puede verificar en la sección de evaluación del sílabo.
+
+\begin{table}[htbp]
+  \centering
+  \caption{Rúbrica general de calificación socioformativa del Modelo Educativo 2026.}
+  \label{tab:rubrica}
+  \footnotesize
+  \setlength{\tabcolsep}{4pt}
+  \renewcommand{\arraystretch}{1.25}
+  \begin{tabular}{|>{\raggedright\arraybackslash}p{2.2cm}|>{\raggedright\arraybackslash}p{6.2cm}|>{\centering\arraybackslash}p{1.6cm}|>{\raggedright\arraybackslash}p{2.6cm}|}
+    \hline
+    \textbf{Nivel} & \textbf{Descriptor del desempeño} & \textbf{Puntaje} & \textbf{Equivalencia} \\
+    \hline
+    1. Receptivo & Reconoce conceptos y escucha a los actores, sin autoría verificable ni vínculo con el territorio & 0,0--5,9 & Reprobado o inicial \\
+    \hline
+    2. Resolutivo & Aplica procedimientos básicos; autoría parcial demostrada & 6,0--6,9 & Aprobación mínima \\
+    \hline
+    3. Reflexivo & Analiza implicaciones, reflexiona sobre su rol y articula teoría y práctica & 7,0--7,9 & Suficiente \\
+    \hline
+    4. Crítico & Problematiza causas estructurales con enfoque sistémico y proceso propio verificable & 8,0--8,9 & Notable; acredita microcredencial \\
+    \hline
+    5. Cocreativo & Cocrea con los actores y orienta la transformación del territorio con ética e innovación & 9,0--10 & Sobresaliente \\
+    \hline
+  \end{tabular}
+  \par\vspace{6pt}\normalsize\justifying
+  \elaboradopor{Rubén Jhair Mera Cedeño}
+  \fuente{Universidad Tecnológica Indoamérica~\cite{uti2026modelo}}
+\end{table}
+
+\subsection{Inteligencia artificial en la docencia y gobernanza ética}
+La incorporación de la inteligencia artificial a la docencia no es neutral, y por ello requiere un marco que delimite su uso. La guía de la UNESCO sobre inteligencia artificial generativa en la educación y la investigación~\cite{unesco2023guidance} recomienda un enfoque centrado en las personas, que proteja los datos, preserve la integridad académica y mantenga la supervisión humana sobre las decisiones pedagógicas. El Modelo Educativo 2026 traslada estos principios a su Eje~5 y afirma que la inteligencia artificial no sustituye el trabajo del docente ni del estudiante, sino que fortalece sus capacidades, siempre bajo principios de transparencia, protección de datos, responsabilidad y supervisión humana~\cite{uti2026modelo}.
+
+Estos principios se convierten, en SyllabusAI, en decisiones de arquitectura. La protección de datos justifica la ejecución local del modelo, sin envío de documentos a servicios externos; la transparencia justifica que cada afirmación cite su fuente; y la supervisión humana justifica la pausa obligatoria para la aprobación docente tras cada sección. La gobernanza ética de la inteligencia artificial deja de ser, así, un enunciado institucional y se convierte en un requisito técnico verificable, con lo que concluye la base educativa y se abre paso a los fundamentos técnicos.
 
 \subsection{Modelos de lenguaje de gran escala}
 Los modelos de lenguaje de gran escala (LLM, por sus siglas en inglés) son redes neuronales profundas~\cite{goodfellow2016deep} entrenadas para estimar la probabilidad de una secuencia de texto. Dado un contexto formado por los \textit{tokens} $x_1, \dots, x_{t-1}$, el modelo predice una distribución sobre el siguiente \textit{token}, y la generación se realiza de forma autorregresiva, \textit{token} a \textit{token}, según la Ecuación~\ref{eq:autorregresivo}.
@@ -274,7 +448,7 @@ Evaluar un sistema de generación asistida exige ir más allá de la corrección
 La perspectiva del usuario se incorpora mediante dos instrumentos adicionales. La distancia de edición de Levenshtein~\cite{levenshtein1966} cuantifica el número mínimo de inserciones, eliminaciones y sustituciones necesarias para transformar el texto propuesto por el agente en el texto aprobado por el docente, lo que ofrece una medida objetiva del esfuerzo de corrección. La escala de usabilidad del sistema (SUS), propuesta por Brooke~\cite{brooke1996sus}, consiste en un cuestionario de diez ítems con respuestas en una escala de Likert de cinco puntos, cuyo resultado se transforma en una puntuación entre 0 y 100. Combinadas con la comparación del tiempo de elaboración manual frente al asistido, estas medidas permiten juzgar no solo si el sistema funciona, sino si resulta útil para quienes deben usarlo.
 
 \subsection{Síntesis de la fundamentación}
-La Tabla~\ref{tab:fundamentacion} relaciona los conceptos expuestos con el componente de SyllabusAI en que se aplican y con el objetivo específico al que contribuyen; las siglas OE1 a OE5 corresponden, en orden, a los objetivos específicos enunciados en la sección de objetivos.
+La Tabla~\ref{tab:fundamentacion} relaciona los conceptos expuestos con el componente de SyllabusAI en que se aplican y con el objetivo específico al que contribuyen; las siglas OE1 a OE4 corresponden, en orden, a los objetivos específicos enunciados en la sección de objetivos. De los catorce conceptos, seis proceden del campo educativo y ocho del campo técnico, proporción que refleja la doble naturaleza, pedagógica y tecnológica, del problema.
 
 \begin{table}[htbp]
   \centering
@@ -287,7 +461,17 @@ La Tabla~\ref{tab:fundamentacion} relaciona los conceptos expuestos con el compo
     \hline
     \textbf{Concepto} & \textbf{Aplicación en SyllabusAI} & \textbf{Objetivo} \\
     \hline
-    Alineamiento constructivo~\cite{biggs1996alignment} & Reglas de cobertura de resultados de aprendizaje y detección de elementos huérfanos & OE4 \\
+    Socioformación y Modelo Educativo 2026~\cite{tobon2013,uti2026modelo} & Plantillas de las nueve secciones con problema del territorio, reto, producto integrador y aporte al PIS & OE1, OE3 \\
+    \hline
+    Niveles de concreción y crédito académico~\cite{ces2022rra,uti2026propuesta} & Recuperación previa de malla y perfil; control de horas por componente (48 horas por crédito) & OE1, OE3 \\
+    \hline
+    Alineamiento constructivo y diseño inverso~\cite{biggs1996alignment,wiggins2005ubd} & Reglas de cobertura, detección de elementos huérfanos y orden de generación de las secciones & OE3 \\
+    \hline
+    Taxonomías y resultados de aprendizaje~\cite{anderson2001taxonomy,uti2026modelo} & Validación de uno a cuatro resultados por PF y alerta ante verbos de baja complejidad & OE3 \\
+    \hline
+    Evaluación formativa y socioformativa~\cite{black1998blackbox,uti2026modelo} & Sección de evaluación con rúbrica de cinco niveles, retroalimentación y mejora & OE3 \\
+    \hline
+    Gobernanza ética de la IA~\cite{unesco2023guidance} & Ejecución local, citas transparentes y aprobación docente obligatoria & OE3, OE4 \\
     \hline
     Modelos de lenguaje y atención~\cite{vaswani2017attention} & Generación de cada sección con Qwen3-8B y contexto acotado por sección & OE3 \\
     \hline
@@ -297,17 +481,18 @@ La Tabla~\ref{tab:fundamentacion} relaciona los conceptos expuestos con el compo
     \hline
     Generación aumentada por recuperación~\cite{lewis2020rag} & Generación condicionada a la evidencia institucional recuperada & OE2, OE3 \\
     \hline
-    Citación y abstención~\cite{gao2023alce} & Referencias verificables por documento, versión y página; alertas ante evidencia insuficiente & OE2, OE4 \\
+    Citación y abstención~\cite{gao2023alce} & Referencias verificables por documento, versión y página; alertas ante evidencia insuficiente & OE2, OE3 \\
     \hline
     Agente en grafo con humano en el bucle~\cite{langgraph2024} & Flujo por secciones con herramientas cerradas y aprobación docente obligatoria & OE3 \\
     \hline
-    Inferencia y sus métricas~\cite{kwon2023vllm} & Medición de TTFT, latencia, \textit{throughput} y memoria sobre la NVIDIA A100 & OE5 \\
+    Inferencia y sus métricas~\cite{kwon2023vllm} & Medición de TTFT, latencia, \textit{throughput} y memoria sobre la NVIDIA A100 & OE4 \\
     \hline
-    Fidelidad, distancia de edición y SUS~\cite{es2024ragas,levenshtein1966,brooke1996sus} & Evaluación de la calidad, el esfuerzo de corrección y la usabilidad del prototipo & OE5 \\
+    Fidelidad, distancia de edición y SUS~\cite{es2024ragas,levenshtein1966,brooke1996sus} & Evaluación de la calidad, el esfuerzo de corrección y la usabilidad del prototipo & OE4 \\
     \hline
   \end{tabular}
+  \par\vspace{6pt}\normalsize\justifying
+  \elaboradopor{Rubén Jhair Mera Cedeño}
+  \fuente{Elaboración propia}
 \end{table}
-\elaboradopor{Rubén Jhair Mera Cedeño}
-\fuente{Elaboración propia}
 
-En conjunto, la fundamentación muestra que cada decisión de diseño de SyllabusAI se apoya en un concepto preciso: el alineamiento constructivo define qué debe verificarse, la recuperación de información y el RAG definen de dónde procede la evidencia, el agente define cómo se organiza el trabajo, y la inferencia y la evaluación definen cómo se mide el resultado. Establecidas estas bases conceptuales, el capítulo siguiente describe la metodología con la que se desarrollará y validará el prototipo.
+En conjunto, la fundamentación muestra que cada decisión de diseño de SyllabusAI se apoya en un concepto preciso: la socioformación y el Modelo Educativo definen qué debe contener el sílabo, el alineamiento constructivo, las taxonomías y la evaluación socioformativa definen qué debe verificarse, la gobernanza ética de la inteligencia artificial define los límites de su uso, la recuperación de información y el RAG definen de dónde procede la evidencia, el agente define cómo se organiza el trabajo, y la inferencia y la evaluación definen cómo se mide el resultado. Establecidas estas bases conceptuales, el capítulo siguiente describe la metodología con la que se desarrolló y validó el agente.

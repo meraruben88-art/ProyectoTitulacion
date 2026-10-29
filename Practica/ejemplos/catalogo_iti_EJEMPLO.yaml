@@ -1,0 +1,203 @@
+# CATÁLOGO DE EJEMPLO — DATOS FICTICIOS PARA PROBAR EL PROTOTIPO.
+#
+# Las asignaturas, horas, RA y contenidos mínimos de este archivo NO son la malla oficial de
+# la carrera ITI: se redactaron para ejercitar el flujo completo. Las competencias del perfil
+# de egreso (PE-xx-xx) sí se transcriben de la ficha ITI-TFG-B26-0018. Reemplace este archivo
+# por la ficha curricular oficial (malla aprobada) antes de la validación con docentes.
+
+asignaturas:
+  - codigo: ITI-501
+    nombre: Inteligencia Artificial
+    carrera: ITI
+    nivel: 5
+    creditos: 3
+    horas: 144
+    prerrequisitos: [ITI-401]
+    ficha:
+      facultad: Facultad de Ingenierías
+      unidad_organizacion: Profesional
+      modalidad: Presencial
+      horas_contacto: 72
+      horas_practicas: 26
+      horas_autonomas: 46
+      correquisitos: [ITI-502]
+      competencia_especifica: >-
+        PE-PP-04 -- Desarrolla aplicaciones informáticas de vanguardia y sostenibles para
+        procesar información y automatizar procesos como soporte a las decisiones estratégicas.
+      metacompetencia: Gobernanza ética de tecnologías digitales e IA
+      pis_periodo: "PIS de nivel 5 (EJEMPLO): Servicios digitales inteligentes para la gestión académica"
+      resultados_aprendizaje:
+        - codigo: RA1
+          enunciado: >-
+            Analiza problemas del entorno institucional susceptibles de automatización
+            inteligente, considerando los datos disponibles, los actores involucrados y
+            criterios éticos.
+        - codigo: RA2
+          enunciado: >-
+            Desarrolla modelos de aprendizaje automático que resuelven problemas del contexto,
+            con métricas de desempeño verificables y gobernanza ética de los datos.
+        - codigo: RA3
+          enunciado: >-
+            Evalúa soluciones de inteligencia artificial en escenarios reales o simulados,
+            contrastando su impacto, sus sesgos y su sostenibilidad con los actores del territorio.
+      contenidos_minimos:
+        - Agentes inteligentes y resolución de problemas mediante búsqueda
+        - Aprendizaje automático supervisado y no supervisado
+        - Redes neuronales y aprendizaje profundo
+        - Evaluación de modelos y métricas de desempeño
+        - Ética, sesgos y gobernanza de la inteligencia artificial
+
+  - codigo: ITI-302
+    nombre: Bases de Datos
+    carrera: ITI
+    nivel: 3
+    creditos: 3
+    horas: 144
+    prerrequisitos: [ITI-201]
+    ficha:
+      facultad: Facultad de Ingenierías
+      unidad_organizacion: Básica
+      modalidad: Presencial
+      horas_contacto: 48
+      horas_practicas: 32
+      horas_autonomas: 64
+      competencia_especifica: >-
+        PE-MI-05 -- Aplica teorías, metodologías, estándares y tecnologías apropiadas para crear
+        soluciones de software mediante el análisis, diseño, desarrollo, implementación,
+        verificación, documentación y gestión.
+      resultados_aprendizaje:
+        - codigo: RA1
+          enunciado: >-
+            Diseña modelos de datos relacionales normalizados para procesos de información
+            institucionales, garantizando integridad y consistencia de los datos.
+        - codigo: RA2
+          enunciado: >-
+            Implementa bases de datos y consultas SQL que atienden requerimientos reales de
+            información, aplicando criterios de seguridad y protección de datos personales.
+      contenidos_minimos:
+        - Modelo entidad-relación y modelo relacional
+        - Normalización
+        - Lenguaje SQL de definición y manipulación de datos
+        - Transacciones, concurrencia e integridad
+        - Seguridad y protección de datos personales
+
+  - codigo: ITI-403
+    nombre: Ingeniería de Software
+    carrera: ITI
+    nivel: 4
+    creditos: 4
+    horas: 160
+    prerrequisitos: [ITI-302]
+    ficha:
+      facultad: Facultad de Ingenierías
+      unidad_organizacion: Profesional
+      modalidad: Presencial
+      horas_contacto: 64
+      horas_practicas: 32
+      horas_autonomas: 64
+      competencia_especifica: >-
+        PE-MI-06 -- Utiliza normas y estándares de calidad de ingeniería en tecnologías de la
+        información para garantizar que las implementaciones de software y hardware sean
+        robustas, confiables y adecuadas para el usuario.
+      resultados_aprendizaje:
+        - codigo: RA1
+          enunciado: >-
+            Especifica requisitos de software con los actores de una organización,
+            priorizándolos según su valor y su viabilidad técnica.
+        - codigo: RA2
+          enunciado: >-
+            Diseña arquitecturas de software modulares que responden a los requisitos,
+            justificando las decisiones con atributos de calidad.
+        - codigo: RA3
+          enunciado: >-
+            Implementa incrementos de software con prácticas de control de versiones, pruebas
+            automatizadas y revisión de código.
+        - codigo: RA4
+          enunciado: >-
+            Gestiona proyectos de software con metodologías ágiles, evaluando el avance y la
+            calidad del producto con métricas verificables.
+      contenidos_minimos:
+        - Procesos y metodologías de desarrollo de software
+        - Ingeniería de requisitos
+        - Diseño y arquitectura de software
+        - Pruebas y aseguramiento de la calidad
+        - Gestión de proyectos ágiles
+
+  - codigo: ITI-604
+    nombre: Desarrollo de Aplicaciones Web
+    carrera: ITI
+    nivel: 6
+    creditos: 4
+    horas: 160
+    prerrequisitos: [ITI-403, ITI-302]
+    ficha:
+      facultad: Facultad de Ingenierías
+      unidad_organizacion: Profesional
+      modalidad: Híbrida
+      horas_contacto: 64
+      horas_practicas: 40
+      horas_autonomas: 56
+      correquisitos: [ITI-605]
+      competencia_especifica: >-
+        PE-MI-05 -- Aplica teorías, metodologías, estándares y tecnologías apropiadas para crear
+        soluciones de software mediante el análisis, diseño, desarrollo, implementación,
+        verificación, documentación y gestión.
+      pis_periodo: "PIS de nivel 6 (EJEMPLO): Plataformas digitales para emprendimientos locales"
+      resultados_aprendizaje:
+        - codigo: RA1
+          enunciado: >-
+            Diseña interfaces web accesibles y centradas en el usuario a partir de requisitos
+            levantados con los actores de una organización.
+        - codigo: RA2
+          enunciado: >-
+            Desarrolla aplicaciones web completas que integran servicios, bases de datos y
+            mecanismos de autenticación, aplicando buenas prácticas de seguridad.
+        - codigo: RA3
+          enunciado: >-
+            Despliega aplicaciones web en entornos de producción, verificando su rendimiento,
+            su seguridad y su mantenibilidad con pruebas automatizadas.
+      contenidos_minimos:
+        - Arquitectura cliente-servidor y protocolo HTTP
+        - Diseño de interfaces web accesibles
+        - Desarrollo del lado del cliente
+        - Servicios web y API REST
+        - Autenticación, autorización y seguridad web
+        - Despliegue, pruebas y mantenimiento
+
+  - codigo: ITI-405
+    nombre: Redes de Computadoras
+    carrera: ITI
+    nivel: 4
+    creditos: 3
+    horas: 144
+    prerrequisitos: [ITI-202]
+    ficha:
+      facultad: Facultad de Ingenierías
+      unidad_organizacion: Profesional
+      modalidad: Presencial
+      horas_contacto: 56
+      horas_practicas: 40
+      horas_autonomas: 48
+      competencia_especifica: >-
+        PE-MI-06 -- Utiliza normas y estándares de calidad de ingeniería en tecnologías de la
+        información para garantizar que las implementaciones de software y hardware sean
+        robustas, confiables y adecuadas para el usuario.
+      resultados_aprendizaje:
+        - codigo: RA1
+          enunciado: >-
+            Analiza los requerimientos de conectividad de una organización, considerando sus
+            servicios, usuarios y restricciones técnicas y económicas.
+        - codigo: RA2
+          enunciado: >-
+            Diseña topologías de red segmentadas y escalables, justificando el direccionamiento
+            y los protocolos con estándares vigentes.
+        - codigo: RA3
+          enunciado: >-
+            Implementa y verifica configuraciones de red en escenarios reales o simulados,
+            documentando pruebas de conectividad, seguridad y desempeño.
+      contenidos_minimos:
+        - Modelos de referencia OSI y TCP/IP
+        - Direccionamiento IPv4 e IPv6 y subredes
+        - Conmutación, VLAN y enrutamiento
+        - Servicios de red y protocolos de aplicación
+        - Seguridad perimetral y redes inalámbricas

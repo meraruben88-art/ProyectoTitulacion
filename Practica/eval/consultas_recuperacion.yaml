@@ -1,0 +1,166 @@
+# Conjunto anotado para evaluar el recuperador (SPEC 11: Recall@k y MRR).
+#
+# Cada consulta lista los fragmentos relevantes por criterio y no por identificador, para que la
+# anotación siga valiendo aunque cambie la segmentación o se reindexe el corpus. Un fragmento es
+# relevante si coincide con alguno de los criterios: el título del documento contiene
+# `documento` y, además, la ruta de títulos contiene `seccion` o el texto contiene `texto`
+# (comparación sin tildes ni mayúsculas). Las anotaciones las hizo el autor sobre el corpus de
+# EJEMPLO (manifiesto_EJEMPLO.yaml); deben revisarse con el tutor antes de la fase 8.
+#
+# `filtros` reproduce cómo consulta cada herramienta del agente (tipos de documento, carrera).
+
+k: 5
+
+consultas:
+  - id: R01
+    consulta: niveles de la rúbrica socioformativa receptivo resolutivo reflexivo crítico cocreativo
+    relevantes:
+      - {documento: Modelo Educativo, seccion: Rúbrica institucional de evaluación socioformativa}
+      - {documento: Guía metodológica de construcción de PIS, seccion: "7.8 Evaluación"}
+      - {documento: Propuesta técnica, seccion: "7.7. Sistema de evaluación socioformativa"}
+
+  - id: R02
+    consulta: metacompetencias transversales institucionales del proyecto formativo
+    relevantes:
+      - {documento: Propuesta técnica, seccion: "3.3. Metacompetencias"}
+
+  - id: R03
+    consulta: ejes transversales del modelo educativo que se declaran en el sílabo
+    relevantes:
+      - {documento: Propuesta técnica, seccion: "3.4. Ejes transversales"}
+      - {documento: Modelo Educativo, seccion: Ejes transversales del Modelo Educativo}
+
+  - id: R04
+    consulta: cómo redactar la pregunta reto y el producto integrador
+    relevantes:
+      - {documento: Propuesta técnica, seccion: "Paso 6. Definir reto y producto integrador"}
+      - {documento: Propuesta técnica, seccion: "7.3. Problema del territorio"}
+
+  - id: R05
+    consulta: control obligatorio de horas por componente de aprendizaje
+    relevantes:
+      - {documento: Propuesta técnica, texto: Control obligatorio de horas}
+      - {documento: Propuesta técnica, seccion: "Paso 9. Distribuir el proyecto en momentos y horas"}
+
+  - id: R06
+    consulta: planeación operativa por momentos macro-fases del proyecto formativo
+    relevantes:
+      - {documento: Propuesta técnica, seccion: "7.6. Planeación operativa por momentos"}
+      - {documento: Propuesta técnica, seccion: "Paso 9. Distribuir el proyecto en momentos"}
+
+  - id: R07
+    consulta: oportunidad de mejora y reentrega de las evidencias evaluadas
+    relevantes:
+      - {documento: Propuesta técnica, seccion: "7.7. Sistema de evaluación socioformativa"}
+      - {documento: Propuesta técnica, seccion: "Paso 11. Diseñar evidencias"}
+
+  - id: R08
+    consulta: datos personales que no se ingresan en herramientas de inteligencia artificial
+    relevantes:
+      - {documento: Lineamientos para el uso de IA, seccion: Datos que no se ingresan}
+
+  - id: R09
+    consulta: declaración del uso de inteligencia artificial en cada evidencia
+    relevantes:
+      - {documento: Lineamientos para el uso de IA, seccion: Declaración de uso}
+      - {documento: Lineamientos para el uso de IA, seccion: Usos autorizados en las evidencias}
+      - {documento: Propuesta técnica, seccion: "Paso 10. Diseñar experiencias y gobernanza de IA"}
+
+  - id: R10
+    consulta: PE-PP-04
+    filtros: {tipos: [perfil_egreso], carrera: ITI}
+    relevantes:
+      - {documento: Perfil de egreso ITI, texto: PE-PP-04}
+
+  - id: R11
+    consulta: PE-MI-06 normas y estándares de calidad
+    filtros: {tipos: [perfil_egreso], carrera: ITI}
+    relevantes:
+      - {documento: Perfil de egreso ITI, texto: PE-MI-06}
+
+  - id: R12
+    consulta: contenidos mínimos de Bases de Datos
+    filtros: {tipos: [malla, contenidos_minimos], carrera: ITI}
+    relevantes:
+      - {documento: Malla curricular, seccion: Contenidos mínimos de Bases de Datos}
+
+  - id: R13
+    consulta: resultados de aprendizaje de Inteligencia Artificial
+    filtros: {tipos: [malla, contenidos_minimos], carrera: ITI}
+    relevantes:
+      - {documento: Malla curricular, seccion: Resultados de aprendizaje de Inteligencia Artificial}
+
+  - id: R14
+    consulta: bibliografía básica de Ingeniería de Software
+    filtros: {tipos: [malla, contenidos_minimos, silabo_aprobado], carrera: ITI}
+    relevantes:
+      - {documento: Malla curricular, seccion: Bibliografía básica de Ingeniería de Software}
+
+  - id: R15
+    consulta: contenidos mínimos de Desarrollo de Aplicaciones Web
+    filtros: {tipos: [malla, contenidos_minimos], carrera: ITI}
+    relevantes:
+      - {documento: Malla curricular, seccion: Contenidos mínimos de Desarrollo de Aplicaciones Web}
+
+  - id: R16
+    consulta: resultados de aprendizaje de Redes de Computadoras
+    filtros: {tipos: [malla, contenidos_minimos], carrera: ITI}
+    relevantes:
+      - {documento: Malla curricular, seccion: Resultados de aprendizaje de Redes de Computadoras}
+
+  - id: R17
+    consulta: ITI-405 horas de contacto docente y prerrequisitos
+    filtros: {tipos: [malla], carrera: ITI}
+    relevantes:
+      - {documento: Malla curricular, texto: "Código | ITI-405"}
+
+  - id: R18
+    consulta: ejemplo de planeación por momentos de un sílabo aprobado
+    relevantes:
+      - {documento: Sílabo aprobado ITI-302, seccion: Planeación por momentos}
+      - {documento: Propuesta técnica, seccion: "9.4. Ejemplo de distribución por momentos"}
+
+  - id: R19
+    consulta: aporte del proyecto formativo al PIS sin horas adicionales
+    relevantes:
+      - {documento: Propuesta técnica, seccion: "Paso 4. Confirmar el aporte al PIS"}
+      - {documento: Propuesta técnica, seccion: "7.2. Anclaje curricular"}
+
+  - id: R20
+    consulta: accesibilidad e inclusión de estudiantes con necesidades educativas específicas
+    relevantes:
+      - {documento: Propuesta técnica, seccion: "7.2. Anclaje curricular"}
+      - {documento: Propuesta técnica, seccion: "7.8. Recursos, bibliografía y escenarios"}
+
+  - id: R21
+    consulta: principios de la gobernanza ética de la inteligencia artificial
+    relevantes:
+      - {documento: Modelo Educativo, seccion: Principios institucionales de la gobernanza ética de la IA}
+      - {documento: Modelo Educativo, seccion: Pedagogía de la gobernanza ética de la IA}
+      - {documento: Lineamientos para el uso de IA, seccion: Verificación y gobernanza ética}
+
+  - id: R22
+    consulta: formulación del problema del proyecto interdisciplinario socioformativo
+    relevantes:
+      - {documento: Guía metodológica de construcción de PIS, seccion: "7.1 Formulación del problema"}
+
+  - id: R23
+    consulta: confirmar la competencia específica del perfil de egreso a la que contribuye el PF
+    relevantes:
+      - {documento: Propuesta técnica, seccion: "Paso 2. Confirmar la competencia específica"}
+      - {documento: Propuesta técnica, seccion: "7.2. Anclaje curricular"}
+
+  - id: R24
+    consulta: seguimiento, mejora continua y aseguramiento de la calidad
+    relevantes:
+      - {documento: Modelo Educativo, seccion: Sistema Interno de Aseguramiento de la Calidad}
+      - {documento: Modelo Educativo, seccion: logro de resultados de aprendizaje y mejora continua}
+      - {documento: Propuesta técnica, seccion: "6. Arquitectura recomendada del nuevo sílabo"}
+
+# Consultas cuya respuesta solo está en un documento OBSOLETO: el recuperador no debe devolverlo
+# (filtro de vigencia, RF-11). Se mide el % de consultas sin ningún fragmento obsoleto.
+obsoletas:
+  - id: V01
+    consulta: el uso de inteligencia artificial es libre y no requiere declaración
+  - id: V02
+    consulta: se permite el uso de inteligencia artificial sin restricciones en todas las evidencias

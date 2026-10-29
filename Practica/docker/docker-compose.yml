@@ -1,0 +1,59 @@
+# SyllabusAI con Docker Compose (decisión D-4: Docker si el servidor lo permite; si no, Apptainer).
+#
+# Sin GPU (modelo simulado), desde la carpeta Practica:
+#   docker compose -f docker/docker-compose.yml up --build
+# En la A100 (vLLM + Qwen3-8B + BGE-M3):
+#   docker compose -f docker/docker-compose.yml --profile gpu up --build
+#
+# API: http://localhost:8080/docs · Interfaz: http://localhost:8501
+
+services:
+  api:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+      args:
+        EXTRAS: ${SYLLABUSAI_EXTRAS:-}
+    command: ["api"]
+    environment:
+      SYLLABUSAI_CONFIG: ${SYLLABUSAI_CONFIG:-/app/config/config.yaml}
+      SYLLABUSAI_LLM_URL: http://vllm:8000/v1
+    volumes:
+      - datos:/app/data
+    ports:
+      - "8080:8080"
+
+  ui:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    command: ["ui"]
+    environment:
+      SYLLABUSAI_API: http://api:8080
+      SYLLABUSAI_PREPARAR_EJEMPLO: "0"
+    ports:
+      - "8501:8501"
+    depends_on:
+      - api
+
+  # Solo con --profile gpu. Use SYLLABUSAI_CONFIG=/app/config/config.a100.yaml y
+  # SYLLABUSAI_EXTRAS=embeddings para que la API use vLLM y BGE-M3.
+  vllm:
+    profiles: ["gpu"]
+    image: vllm/vllm-openai:v0.10.1
+    command: ["--model", "Qwen/Qwen3-8B", "--max-model-len", "16384"]
+    volumes:
+      - modelos:/root/.cache/huggingface
+    ports:
+      - "8000:8000"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+volumes:
+  datos:
+  modelos:

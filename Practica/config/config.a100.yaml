@@ -1,0 +1,58 @@
+# Configuración para el servidor con la NVIDIA A100 (SPEC, sección 12).
+# Uso: SYLLABUSAI_CONFIG=config/config.a100.yaml syllabusai api
+# Requiere: pip install -e .[embeddings] y vLLM sirviendo Qwen3-8B (ver docker/ o docs/).
+# Al cambiar de embeddings hay que reindexar: syllabusai ingestar ejemplos/manifiesto_EJEMPLO.yaml --reindexar
+# (y borrar antes data/qdrant, que guarda la dimensión de los vectores).
+
+base_datos:
+  url: sqlite:///data/syllabusai.db
+
+corpus:
+  directorio: data/corpus
+  extensiones: [".pdf", ".docx"]
+
+formato: config/formato_silabo_2026.yaml
+
+segmentacion:
+  palabras_max: 220
+  palabras_solape: 40
+
+base_vectorial:
+  ruta: data/qdrant
+  url: null
+  coleccion: fragmentos
+
+embeddings:
+  proveedor: sentence_transformers
+  modelo: BAAI/bge-m3
+  dimension: 1024
+
+recuperacion:
+  top_k: 6
+  candidatos: 24
+  bm25_k1: 1.2
+  bm25_b: 0.75
+  bm25_longitud_media: 160
+  min_fragmentos: 1
+
+llm:
+  proveedor: openai
+  # En Docker Compose se reemplaza con SYLLABUSAI_LLM_URL=http://vllm:8000/v1
+  url: http://localhost:8000/v1
+  modelo: Qwen/Qwen3-8B
+  api_key: EMPTY
+  temperatura: 0.2
+  max_tokens: 3072
+  timeout_s: 180
+  pensar: false
+
+agente:
+  checkpoints: data/checkpoints.db
+
+exportacion:
+  directorio: data/exportados
+  soffice: soffice
+
+telemetria:
+  directorio: data/metricas
+  metricas_vllm: http://localhost:8000/metrics

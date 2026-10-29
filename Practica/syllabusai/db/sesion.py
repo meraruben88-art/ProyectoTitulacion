@@ -2,7 +2,7 @@
 
 from pathlib import Path
 
-from sqlalchemy import Engine, create_engine, event
+from sqlalchemy import Engine, create_engine, event, inspect, text
 from sqlalchemy.engine import make_url
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
@@ -38,6 +38,21 @@ def crear_motor(url: str) -> Engine:
 
 def crear_tablas(motor: Engine) -> None:
     Base.metadata.create_all(motor)
+    _agregar_columnas_nuevas(motor)
+
+
+def _agregar_columnas_nuevas(motor: Engine) -> None:
+    """Migración mínima: añade las columnas anulables que una base anterior todavía no tiene."""
+    existentes = inspect(motor)
+    with motor.begin() as conexion:
+        for tabla in Base.metadata.sorted_tables:
+            if not existentes.has_table(tabla.name):
+                continue
+            presentes = {c["name"] for c in existentes.get_columns(tabla.name)}
+            for columna in tabla.columns:
+                if columna.name not in presentes and columna.nullable:
+                    tipo = columna.type.compile(dialect=motor.dialect)
+                    conexion.execute(text(f'ALTER TABLE {tabla.name} ADD COLUMN "{columna.name}" {tipo}'))
 
 
 def crear_fabrica_sesiones(motor: Engine) -> sessionmaker[Session]:

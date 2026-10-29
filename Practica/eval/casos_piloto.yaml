@@ -1,0 +1,216 @@
+# Casos de prueba del agente (SPEC 11: entre 3 y 5 asignaturas piloto y casos adversos).
+# DATOS FICTICIOS: asignaturas del catálogo de EJEMPLO y docentes simulados.
+#
+# Cada caso piloto simula a un docente: datos generales, preferencias del formulario,
+# indicaciones generales en texto libre y una conversación durante la revisión (lo que pide en
+# cada sección antes de aprobarla). `verificar` comprueba que el sílabo final cumple lo pedido:
+#   ruta      campo dentro del contenido de la sección; [*] recorre una lista
+#   contiene / no_contiene   todos los valores contienen (o no) el texto, sin tildes ni mayúsculas
+#   igual     el valor (o la lista de valores) es exactamente ese
+#   incluye   alguno de los valores (o listas) incluye el elemento
+
+piloto:
+  - id: P1
+    asignatura: ITI-501
+    docente: Docente simulada 1 (Inteligencia Artificial)
+    datos_generales:
+      semanas_periodo: 16
+      contexto_problema: >-
+        En el periodo A25, la Dirección de Bienestar registró 1 240 consultas de estudiantes de
+        primer nivel sobre trámites académicos, de las cuales el 38 % se atendió fuera del plazo
+        de 48 horas
+      fuentes_problema: Informe de atención estudiantil A25 (dato ficticio de ejemplo)
+      escenario: la Dirección de Bienestar Estudiantil, sede Quito
+      actores: estudiantes de primer nivel y personal de Bienestar
+    preferencias:
+      producto: un asistente conversacional que oriente a los estudiantes de primer nivel sobre trámites académicos
+      tecnologias: [Python, scikit-learn]
+      politica_ia: limitada
+    indicaciones_generales: Que trabajen en equipos de 3. Agrega coevaluación.
+    conversacion:
+      - {seccion: anclaje_curricular, indicacion: fortalecer el pensamiento crítico}
+      - {seccion: planeacion_momentos, indicacion: momento 3 con 30% y momento 1 con 25%}
+      - {seccion: evaluacion, indicacion: "agrega el criterio: el asistente responde correctamente al menos el 80 % de las preguntas de prueba"}
+      - {seccion: recursos, indicacion: "agrega la referencia: Jurafsky, D., & Martin, J. H. (2024). Speech and Language Processing (3rd ed. draft). Stanford University."}
+    verificar:
+      - {seccion: anclaje_curricular, ruta: habilidades_blandas, incluye: Pensamiento crítico}
+      - {seccion: problema_reto, ruta: pregunta_reto, contiene: asistente conversacional}
+      - {seccion: problema_reto, ruta: producto_integrador, contiene: scikit-learn}
+      - {seccion: planeacion_momentos, ruta: "momentos[*].practico_experimental", contiene: equipos de 3}
+      - {seccion: planeacion_momentos, ruta: "momentos[*].evaluacion.tipos", incluye: coevaluacion}
+      - {seccion: planeacion_momentos, ruta: "momentos[*].evaluacion.peso", igual: [25, 27, 30, 18]}
+      - {seccion: planeacion_momentos, ruta: "momentos[*].politica_ia", contiene: solo para explorar}
+      - {seccion: evaluacion, ruta: "evidencias[*].criterios", incluye: El asistente responde correctamente al menos el 80 % de las preguntas de prueba}
+      - {seccion: evaluacion, ruta: "evidencias[*].peso", igual: [25, 27, 30, 18]}
+      - {seccion: recursos, ruta: bibliografia_basica, incluye: "Jurafsky, D., & Martin, J. H. (2024). Speech and Language Processing (3rd ed. draft). Stanford University."}
+
+  - id: P2
+    asignatura: ITI-302
+    docente: Docente simulado 2 (Bases de Datos)
+    datos_generales:
+      semanas_periodo: 16
+      contexto_problema: >-
+        La secretaría académica registra 3 600 matrículas por periodo en hojas de cálculo
+        separadas por carrera, lo que en A25 produjo 214 registros duplicados o inconsistentes
+      fuentes_problema: Auditoría interna de secretaría A25 (dato ficticio de ejemplo)
+      escenario: la secretaría académica
+      actores: personal de secretaría y coordinadores de carrera
+    preferencias:
+      trabajo: parejas
+      tecnologias: [PostgreSQL]
+      instrumento: Lista de cotejo
+    conversacion:
+      - {seccion: problema_reto, indicacion: el escenario será la secretaría académica de la sede Ambato}
+      - {seccion: contenidos, indicacion: hazlo más breve}
+      - {seccion: planeacion_momentos, indicacion: usa aula invertida}
+      - seccion: seguimiento_mejora
+        editar: {acciones_mejora: "Al cierre de cada momento se revisan con la secretaría los registros corregidos y se ajusta el modelo de datos si aparecen nuevas inconsistencias."}
+    verificar:
+      - {seccion: problema_reto, ruta: escenario_actores, contiene: sede Ambato}
+      - {seccion: contenidos, ruta: contenidos_minimos, igual: ["Modelo entidad-relación y modelo relacional", "Normalización", "Lenguaje SQL de definición y manipulación de datos", "Transacciones, concurrencia e integridad", "Seguridad y protección de datos personales"]}
+      - {seccion: planeacion_momentos, ruta: "momentos[*].contacto_docente", contiene: aula invertida}
+      - {seccion: planeacion_momentos, ruta: "momentos[*].practico_experimental", contiene: en parejas}
+      - {seccion: planeacion_momentos, ruta: "momentos[*].practico_experimental", contiene: postgresql}
+      - {seccion: evaluacion, ruta: "evidencias[*].instrumento", contiene: lista de cotejo}
+      - {seccion: evaluacion, ruta: "evidencias[*].criterios", incluye: Contribución individual verificable dentro del equipo}
+      - {seccion: seguimiento_mejora, ruta: acciones_mejora, contiene: registros corregidos}
+
+  - id: P3
+    asignatura: ITI-403
+    docente: Docente simulada 3 (Ingeniería de Software)
+    datos_generales:
+      semanas_periodo: 16
+      contexto_problema: >-
+        El centro de salud universitario asigna 900 turnos al mes por teléfono y en ventanilla;
+        en A25 el tiempo medio de espera para obtener un turno fue de 35 minutos
+      fuentes_problema: Registro de atención del centro de salud A25 (dato ficticio de ejemplo)
+      escenario: el centro de salud universitario
+      actores: estudiantes, personal médico y administrativo
+    preferencias:
+      metodologia: [Scrum]
+      trabajo: equipos de 4
+      tecnologias: [Git, GitHub]
+      politica_ia: permitida
+    conversacion:
+      - {seccion: problema_reto, indicacion: el reto debe tratar sobre la gestión de turnos del centro de salud universitario}
+      - {seccion: planeacion_momentos, indicacion: agrega autoevaluación y coevaluación}
+      - {seccion: seguimiento_mejora, indicacion: más detallado}
+    verificar:
+      - {seccion: problema_reto, ruta: problema, contiene: gestión de turnos}
+      - {seccion: planeacion_momentos, ruta: "momentos[*].contacto_docente", contiene: scrum}
+      - {seccion: planeacion_momentos, ruta: "momentos[*].practico_experimental", contiene: equipos de 4}
+      - {seccion: planeacion_momentos, ruta: "momentos[*].evaluacion.tipos", incluye: autoevaluacion}
+      - {seccion: planeacion_momentos, ruta: "momentos[*].evaluacion.tipos", incluye: coevaluacion}
+      - {seccion: planeacion_momentos, ruta: "momentos[*].politica_ia", contiene: "generar, depurar"}
+      - {seccion: recursos, ruta: tecnologia_ia, contiene: programación}
+      - {seccion: seguimiento_mejora, ruta: acciones_mejora, contiene: reunión de área}
+
+  - id: P4
+    asignatura: ITI-604
+    docente: Docente simulado 4 (Aplicaciones Web)
+    datos_generales:
+      semanas_periodo: 18
+      contexto_problema: >-
+        De 120 emprendimientos artesanales registrados en la Cámara de Comercio de Ambato, solo
+        17 venden en línea; el resto depende de ferias presenciales
+      fuentes_problema: Catastro de emprendimientos 2025 (dato ficticio de ejemplo)
+      escenario: la asociación de artesanos de Ambato
+      actores: artesanos asociados y sus clientes
+    preferencias:
+      producto: una tienda en línea para emprendimientos artesanales de Ambato
+      tecnologias: [React, Node.js, MongoDB]
+      habilidades_blandas: [Comunicación efectiva, Empatía]
+    indicaciones_generales: Sin IA en las evidencias.
+    conversacion:
+      - {seccion: anclaje_curricular, indicacion: agrega el eje de territorialización}
+      - {seccion: planeacion_momentos, indicacion: momento 2 con 25%}
+    verificar:
+      - {seccion: anclaje_curricular, ruta: habilidades_blandas, igual: [Comunicación efectiva, Empatía]}
+      - {seccion: anclaje_curricular, ruta: "ejes[*].eje", incluye: "Territorialización, innovación y emprendimiento disruptivo"}
+      - {seccion: problema_reto, ruta: producto_integrador, contiene: tienda en línea}
+      - {seccion: planeacion_momentos, ruta: "momentos[*].politica_ia", contiene: no aplica}
+      - {seccion: planeacion_momentos, ruta: "momentos[1].evaluacion.peso", igual: 25}
+      - {seccion: planeacion_momentos, ruta: "momentos[*].practico_experimental", contiene: mongodb}
+      - {seccion: evaluacion, ruta: "evidencias[*].criterios", incluye: Autoría demostrada sin asistencia de IA}
+      - {seccion: recursos, ruta: tecnologia_ia, contiene: no se autoriza}
+
+  - id: P5
+    asignatura: ITI-405
+    docente: Docente simulada 5 (Redes de Computadoras)
+    datos_generales:
+      semanas_periodo: 16
+      contexto_problema: >-
+        La Unidad Educativa Ambato tiene 640 estudiantes y una sola red plana sin segmentar; en
+        2025 registró 22 interrupciones del servicio de Internet de más de una hora
+      fuentes_problema: Bitácora técnica de la unidad educativa 2025 (dato ficticio de ejemplo)
+      escenario: la Unidad Educativa Ambato
+      actores: docentes, estudiantes y personal administrativo de la unidad educativa
+    indicaciones_generales: >-
+      Trabajo individual. Usa Cisco Packet Tracer y Wireshark. Evalúa con escala de valoración.
+    conversacion:
+      - {seccion: resultados_aprendizaje, indicacion: cambia el RA2 para que sea más corto}
+      - {seccion: planeacion_momentos, indicacion: enfócate en la seguridad de la red}
+    verificar:
+      - {seccion: resultados_aprendizaje, ruta: "resultados[1].enunciado", igual: "Diseña topologías de red segmentadas y escalables, justificando el direccionamiento y los protocolos con estándares vigentes."}
+      - {seccion: planeacion_momentos, ruta: "momentos[*].practico_experimental", contiene: de forma individual}
+      - {seccion: planeacion_momentos, ruta: "momentos[*].practico_experimental", contiene: wireshark}
+      - {seccion: planeacion_momentos, ruta: "momentos[*].proposito", contiene: énfasis en la seguridad de la red}
+      - {seccion: evaluacion, ruta: "evidencias[*].instrumento", contiene: escala de valoración}
+      - {seccion: evaluacion, ruta: "evidencias[*].criterios", no_contiene: dentro del equipo}
+
+# Casos adversos: el comportamiento correcto es abstenerse, rechazar o descartar.
+adversos:
+  - id: A1
+    tipo: sin_contexto
+    descripcion: El docente no describe el problema del territorio; la sección 7.3 debe abstenerse.
+    asignatura: ITI-501
+    esperado: {seccion: problema_reto, abstencion: true}
+
+  - id: A2
+    tipo: perfil_obsoleto
+    descripcion: El perfil de egreso está obsoleto; el anclaje curricular debe abstenerse.
+    asignatura: ITI-403
+    esperado: {seccion: anclaje_curricular, abstencion: true}
+
+  - id: A3
+    tipo: carrera_sin_documentos
+    descripcion: Asignatura de una carrera sin perfil ni malla en el corpus (información ausente).
+    asignatura: ENF-301
+    esperado: {seccion: anclaje_curricular, abstencion: true}
+
+  - id: A4
+    tipo: modelo_que_inventa
+    descripcion: El modelo cita un fragmento que no recibió e inventa una referencia; ambos se descartan.
+    asignatura: ITI-302
+    esperado: {seccion: recursos, abstencion: false}
+
+  - id: A5
+    tipo: pesos_imposibles
+    descripcion: El docente pide pesos que no suman 100 %; se mantienen los sugeridos y se avisa.
+    asignatura: ITI-604
+    indicacion: momento 1 con 80% y momento 2 con 30%
+    esperado: {seccion: planeacion_momentos, abstencion: false}
+
+  - id: A6
+    tipo: cambio_oficial
+    descripcion: El docente pide eliminar un RA oficial; el agente lo rechaza y conserva el RA.
+    asignatura: ITI-501
+    indicacion: elimina el RA3
+    esperado: {seccion: resultados_aprendizaje, abstencion: false}
+
+# Asignatura de otra carrera (sin documentos en el corpus) para el caso A3. FICTICIA.
+catalogo_adverso:
+  asignaturas:
+    - codigo: ENF-301
+      nombre: Enfermería Comunitaria
+      carrera: ENF
+      nivel: 3
+      creditos: 3
+      horas: 144
+      ficha:
+        horas_contacto: 48
+        horas_practicas: 48
+        horas_autonomas: 48
+        resultados_aprendizaje:
+          - {codigo: RA1, enunciado: Valora las necesidades de salud de una comunidad con enfoque intercultural.}
+        contenidos_minimos: [Salud comunitaria, Promoción de la salud]

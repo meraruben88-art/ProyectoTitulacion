@@ -8,3 +8,59 @@ base_datos:
 corpus:
   directorio: data/corpus
   extensiones: [".pdf", ".docx"]
+
+# Formato institucional del sílabo (decisión D-1): Propuesta de nuevo sílabo UTI 2026.
+formato: config/formato_silabo_2026.yaml
+
+segmentacion:
+  palabras_max: 220        # tamaño objetivo de cada fragmento
+  palabras_solape: 40      # solape entre fragmentos consecutivos de una misma sección
+
+base_vectorial:
+  # Qdrant en modo local (sin servidor). Para un servidor Qdrant, poner url y dejar ruta vacía.
+  ruta: data/qdrant
+  url: null
+  coleccion: fragmentos
+
+embeddings:
+  # ninguno: solo recuperación léxica (BM25) · sentence_transformers: modelo denso (BGE-M3 en la A100)
+  # hash: vectores deterministas sin modelo, solo para pruebas.
+  proveedor: ninguno
+  modelo: BAAI/bge-m3
+  dimension: 1024
+
+recuperacion:
+  top_k: 6                 # fragmentos que llegan al modelo por consulta (RF-12)
+  candidatos: 24           # candidatos por cada señal antes de la fusión RRF
+  bm25_k1: 1.2
+  bm25_b: 0.75
+  bm25_longitud_media: 160
+  # Abstención (RF-14): mínimo de fragmentos con coincidencia léxica en los tipos requeridos.
+  min_fragmentos: 1
+
+llm:
+  # simulado: generador determinista para desarrollar sin GPU · openai: servidor compatible (vLLM)
+  proveedor: simulado
+  url: http://localhost:8000/v1
+  modelo: Qwen/Qwen3-8B
+  api_key: EMPTY
+  temperatura: 0.2
+  max_tokens: 3072
+  timeout_s: 180
+  # Qwen3: desactiva el modo de razonamiento para respuestas directas en JSON.
+  pensar: false
+  # Modelo simulado: pausa entre trozos de texto al transmitir en vivo a la interfaz.
+  retardo_simulado_ms: 15
+
+agente:
+  checkpoints: data/checkpoints.db
+
+exportacion:
+  directorio: data/exportados
+  # Ruta a soffice (LibreOffice) para DOCX -> PDF (D-7). Si no existe, se usa el renderizador interno.
+  soffice: null
+
+telemetria:
+  directorio: data/metricas
+  # Endpoint Prometheus de vLLM para memoria de GPU y throughput (RF-53).
+  metricas_vllm: http://localhost:8000/metrics

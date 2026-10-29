@@ -11,9 +11,26 @@ dependencies = [
     "pydantic>=2.7,<3",
     "pyyaml>=6,<7",
     "sqlalchemy>=2.0,<2.1",
+    "langgraph>=1.0,<2",
+    "langgraph-checkpoint-sqlite>=3,<4",
+    "qdrant-client>=1.12,<2",
+    "pymupdf>=1.24",
+    "python-docx>=1.1,<2",
+    "reportlab>=4,<6",
+    "httpx>=0.27,<1",
+    "fastapi>=0.115",
+    "uvicorn>=0.30",
+    "streamlit>=1.40,<2",
 ]
 
+[project.scripts]
+syllabusai = "syllabusai.cli:main"
+
 [project.optional-dependencies]
+# Embeddings densos (BGE-M3) para el servidor con GPU; sin este extra la búsqueda es léxica.
+embeddings = [
+    "sentence-transformers>=3",
+]
 dev = [
     "pytest>=8",
     "ruff>=0.6",

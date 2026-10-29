@@ -1,0 +1,69 @@
+# Manifiesto del corpus para el pipeline de ingesta (RF-07): un comando, configuración versionada.
+#   syllabusai ingestar ejemplos/manifiesto_EJEMPLO.yaml
+#
+# Las rutas relativas parten de la carpeta de este archivo. carrera «TODAS» marca documentos
+# institucionales que rigen para cualquier carrera.
+#
+# Los tres primeros documentos son institucionales reales. Las fechas de vigencia se tomaron de
+# su portada cuando la indican; donde no la indican se usó el 1 de enero del año declarado:
+# confírmelas con la Coordinación antes de la validación.
+# Los demás los genera `syllabusai ejemplo` y son FICTICIOS (marcados EJEMPLO). Los lineamientos
+# de IA tienen dos versiones: la de 2024 entra como obsoleta, para comprobar que el agente solo
+# cita la vigente. La malla v2 reemplaza a la v1 (tres asignaturas) con cinco asignaturas piloto.
+
+documentos:
+  - archivo: ../ModeloEducativo.pdf
+    titulo: Modelo Educativo Institucional
+    tipo: normativa
+    carrera: TODAS
+    version: "2026"
+    fecha_vigencia: 2026-01-01
+
+  - archivo: ../Propuesta_nuevo_silabo_y_guia_UTI_2026.docx
+    titulo: Propuesta técnica para el nuevo sílabo de Proyecto Formativo
+    tipo: plantilla
+    carrera: TODAS
+    version: 2026-08
+    fecha_vigencia: 2026-08-01
+
+  - archivo: ../Guia_Construccion_PIS.docx
+    titulo: Guía metodológica de construcción de PIS
+    tipo: normativa
+    carrera: TODAS
+    version: "1.0"
+    fecha_vigencia: 2026-01-01
+
+  - archivo: ../data/ejemplo/perfil_egreso_ITI_EJEMPLO.docx
+    titulo: Perfil de egreso ITI (EJEMPLO)
+    tipo: perfil_egreso
+    carrera: ITI
+    version: ejemplo-1
+    fecha_vigencia: 2026-01-01
+
+  - archivo: ../data/ejemplo/malla_ITI_EJEMPLO_v2.docx
+    titulo: Malla curricular y contenidos mínimos ITI (EJEMPLO)
+    tipo: malla
+    carrera: ITI
+    version: ejemplo-2
+    fecha_vigencia: 2026-09-01
+
+  - archivo: ../data/ejemplo/lineamientos_IA_EJEMPLO_2026.docx
+    titulo: Lineamientos para el uso de IA generativa en la docencia (EJEMPLO)
+    tipo: normativa
+    carrera: TODAS
+    version: "2026"
+    fecha_vigencia: 2026-03-01
+
+  - archivo: ../data/ejemplo/lineamientos_IA_EJEMPLO_2024.docx
+    titulo: Lineamientos para el uso de IA generativa en la docencia (EJEMPLO)
+    tipo: normativa
+    carrera: TODAS
+    version: "2024"
+    fecha_vigencia: 2024-02-01
+
+  - archivo: ../data/ejemplo/silabo_aprobado_ITI-302_A25_EJEMPLO.docx
+    titulo: Sílabo aprobado ITI-302 Bases de Datos A25 (EJEMPLO)
+    tipo: silabo_aprobado
+    carrera: ITI
+    version: A25
+    fecha_vigencia: 2025-04-01
