@@ -288,6 +288,17 @@ class EstadoSeccionValidable:
     contenido: dict
     citas_validas: int  # citas a fragmentos vigentes
     citas_obsoletas: int
+    # El docente escribió la sección sin propuesta citada del agente (p. ej. tras una abstención).
+    redactada_por_docente: bool = False
+
+
+def sin_fuentes(clave: str, redactada_por_docente: bool) -> Hallazgo:
+    """Una propuesta del agente sin fuentes bloquea (RF-32). Lo que el docente escribe por su
+    cuenta es responsabilidad suya: se advierte y puede descartarse con justificación."""
+    if redactada_por_docente:
+        return Hallazgo("RF-32", A, "Sección redactada por el docente sin fuentes del corpus: verifique "
+                        "sus referencias o justifique.", clave)
+    return Hallazgo("RF-32", B, "La sección no tiene ninguna fuente vigente asociada.", clave)
 
 
 def validar_silabo(
@@ -306,8 +317,7 @@ def validar_silabo(
             hallazgos.append(Hallazgo("RF-30", B, "La sección no está aprobada por el docente.", clave))
         hallazgos += validar_seccion(clave, seccion.contenido, ficha, datos)
         if clave in CON_EVIDENCIA and seccion.citas_validas == 0:
-            hallazgos.append(Hallazgo("RF-32", B, "La sección no tiene ninguna fuente vigente "
-                                      "asociada.", clave))
+            hallazgos.append(sin_fuentes(clave, seccion.redactada_por_docente))
         if seccion.citas_obsoletas:
             hallazgos.append(Hallazgo("RF-32", B, f"La sección cita {seccion.citas_obsoletas} "
                                       "fragmento(s) de documentos obsoletos.", clave))

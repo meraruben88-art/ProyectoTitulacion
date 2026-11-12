@@ -1,8 +1,9 @@
 """Modelos de embeddings densos intercambiables (D-5).
 
-En el servidor con la A100 se usa BGE-M3 mediante sentence-transformers (extra `embeddings`).
-Sin GPU el prototipo funciona solo con la señal léxica; el codificador «hash» existe para
-ejercitar la ruta densa en las pruebas sin descargar modelos.
+BGE-M3 puede correr localmente con sentence-transformers (extra `embeddings`) o pedirse a la API
+de embeddings de NVIDIA (NVIDIA Build o un NIM en NVIDIA Brev). Sin modelo el prototipo funciona
+solo con la señal léxica; el codificador «hash» existe para ejercitar la ruta densa en las
+pruebas sin descargar modelos.
 """
 
 import hashlib
@@ -55,9 +56,44 @@ class CodificadorSentenceTransformers:
         return self._modelo.encode(textos, normalize_embeddings=True, batch_size=16).tolist()
 
 
+class CodificadorNVIDIA:
+    """Embeddings por la API de NVIDIA (`/v1/embeddings`, compatible con OpenAI)."""
+
+    def __init__(self, config: ConfigEmbeddings, transporte=None):
+        import httpx
+
+        from syllabusai.config import clave_api
+
+        self.nombre = config.modelo
+        self.dimension = config.dimension
+        self.tipo_entrada = config.tipo_entrada
+        self._http = httpx.Client(
+            base_url=config.url.rstrip("/"), timeout=60.0, transport=transporte,
+            headers={"Authorization": f"Bearer {clave_api('', config.api_key_env)}"},
+        )
+
+    def codificar(self, textos: list[str]) -> list[list[float]]:
+        vectores: list[list[float]] = []
+        for i in range(0, len(textos), 32):
+            cuerpo = {"model": self.nombre, "input": textos[i:i + 32], "encoding_format": "float",
+                      "truncate": "END"}
+            if self.tipo_entrada:
+                cuerpo["input_type"] = self.tipo_entrada
+            r = self._http.post("/embeddings", json=cuerpo)
+            if r.status_code >= 400:
+                raise RuntimeError(f"La API de embeddings respondió {r.status_code}: {r.text[:300]}")
+            datos = sorted(r.json()["data"], key=lambda d: d["index"])
+            for d in datos:
+                norma = math.sqrt(sum(v * v for v in d["embedding"])) or 1.0
+                vectores.append([v / norma for v in d["embedding"]])
+        return vectores
+
+
 def crear_codificador(config: ConfigEmbeddings) -> CodificadorDenso | None:
     if config.proveedor == "ninguno":
         return None
     if config.proveedor == "hash":
         return CodificadorHash(config.dimension)
+    if config.proveedor == "nvidia":
+        return CodificadorNVIDIA(config)
     return CodificadorSentenceTransformers(config.modelo)

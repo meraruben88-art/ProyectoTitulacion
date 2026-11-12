@@ -1,0 +1,91 @@
+# Configuración con NVIDIA Build: el modelo de 120B por la API alojada de NVIDIA.
+# Uso (PowerShell):  $env:NVIDIA_API_KEY="nvapi-..."; $env:SYLLABUSAI_CONFIG="config/config.nvidia.yaml"; syllabusai web
+# La clave se lee de la variable de entorno NVIDIA_API_KEY; nunca se escribe aquí.
+# Atención: con la API alojada, los fragmentos del corpus viajan a los servidores de NVIDIA. Para
+# que nada salga de una máquina propia use config.brev.yaml (NIM en una instancia de NVIDIA Brev).
+# Las rutas relativas se resuelven desde la raíz del repositorio.
+# Para usar otro archivo: variable de entorno SYLLABUSAI_CONFIG.
+
+base_datos:
+  url: sqlite:///data/syllabusai.db
+
+corpus:
+  directorio: data/corpus
+  extensiones: [".pdf", ".docx"]
+
+# Formato institucional del sílabo (decisión D-1): Propuesta de nuevo sílabo UTI 2026.
+formato: config/formato_silabo_2026.yaml
+
+segmentacion:
+  palabras_max: 220        # tamaño objetivo de cada fragmento
+  palabras_solape: 40      # solape entre fragmentos consecutivos de una misma sección
+
+base_vectorial:
+  # Qdrant en modo local (sin servidor). Para un servidor Qdrant, poner url y dejar ruta vacía.
+  ruta: data/qdrant_nvidia
+  url: null
+  coleccion: fragmentos
+
+embeddings:
+  # BGE-M3 por la API de embeddings de NVIDIA: búsqueda híbrida (densa + BM25).
+  # Usa su propia base vectorial (data/qdrant_nvidia); tras el primer arranque ejecute
+  #   syllabusai reindexar
+  proveedor: nvidia
+  modelo: baai/bge-m3
+  dimension: 1024
+  url: https://integrate.api.nvidia.com/v1
+  api_key_env: NVIDIA_API_KEY
+
+recuperacion:
+  top_k: 6                 # fragmentos que llegan al modelo por consulta (RF-12)
+  candidatos: 24           # candidatos por cada señal antes de la fusión RRF
+  bm25_k1: 1.2
+  bm25_b: 0.75
+  bm25_longitud_media: 160
+  # Abstención (RF-14): mínimo de fragmentos con coincidencia léxica en los tipos requeridos.
+  min_fragmentos: 1
+
+llm:
+  proveedor: nvidia
+  url: https://integrate.api.nvidia.com/v1
+  # Nemotron 3 Super (120B, MoE con 12B activos). Alternativa de tamaño similar en el mismo
+  # catálogo: openai/gpt-oss-120b (cambie también «extra», ver abajo).
+  modelo: nvidia/nemotron-3-super-120b-a12b
+  api_key_env: NVIDIA_API_KEY
+  temperatura: 0.2
+  max_tokens: 8192
+  timeout_s: 300
+  salida_estructurada: json_schema
+  # Respuesta directa en JSON, sin la traza de razonamiento. Para gpt-oss-120b use en su lugar
+  #   extra: {reasoning_effort: low}
+  extra:
+    chat_template_kwargs:
+      enable_thinking: false
+
+agente:
+  checkpoints: data/checkpoints.db
+
+exportacion:
+  directorio: data/exportados
+  # Ruta a soffice (LibreOffice) para DOCX -> PDF (D-7). Si no existe, se usa el renderizador interno.
+  soffice: null
+
+telemetria:
+  directorio: data/metricas
+  # Endpoint Prometheus de vLLM para memoria de GPU y throughput (RF-53).
+  metricas_vllm: http://localhost:8000/metrics
+
+web:
+  sesion_horas: 12
+  cookie: syllabusai_sesion
+  cookie_segura: false   # true cuando la página se sirva por HTTPS
+
+noticias:
+  # El vigía revisa las fuentes externas y la bandeja cada tantos minutos.
+  intervalo_min: 30
+  activo: true
+  # Deje aquí un PDF/DOCX (y opcionalmente un .yaml con sus metadatos) para que se ingiera solo.
+  bandeja: data/bandeja
+
+mallas:
+  directorio: MALLAS

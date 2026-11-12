@@ -15,7 +15,7 @@ from functools import cache
 from pathlib import Path
 from typing import Annotated, Any
 
-from fastapi import Depends, FastAPI, File, Form, HTTPException, UploadFile
+from fastapi import Depends, FastAPI, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import FileResponse, StreamingResponse
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from pydantic import BaseModel
@@ -37,7 +37,7 @@ from syllabusai.ingest.extraccion import ErrorExtraccion
 from syllabusai.ingest.pipeline import procesar_documento, sincronizar_vigencia
 from syllabusai.ingest.registro import ErrorRegistro, cambiar_estado, registrar_documento
 from syllabusai.llm.base import ErrorLLM
-from syllabusai.seguridad import autenticar
+from syllabusai.seguridad import autenticar, usuario_de_token
 from syllabusai.telemetry.eventos import exportar as exportar_eventos
 
 
@@ -49,20 +49,31 @@ def contenedor_por_defecto() -> Contenedor:
 def crear_app(obtener_contenedor=contenedor_por_defecto) -> FastAPI:
     app = FastAPI(title="SyllabusAI", version="0.2.0",
                   description="Agente RAG para la creación asistida de sílabos (formato UTI 2026)")
-    basica = HTTPBasic()
+    basica = HTTPBasic(auto_error=False)
 
     def contenedor() -> Contenedor:
         return obtener_contenedor()
 
     Cont = Annotated[Contenedor, Depends(contenedor)]
 
-    def usuario_actual(c: Cont, cred: Annotated[HTTPBasicCredentials, Depends(basica)]) -> dict:
+    def usuario_actual(
+        c: Cont, request: Request, cred: Annotated[HTTPBasicCredentials | None, Depends(basica)],
+    ) -> dict:
+        """Usuario de la cookie de sesión (web) o de la autenticación básica (API)."""
         with c.fabrica() as sesion:
-            usuario = autenticar(sesion, cred.username, cred.password)
+            usuario = None
+            token = request.cookies.get(c.config.web.cookie)
+            if cred is not None:
+                usuario = autenticar(sesion, cred.username, cred.password)
+            elif token:
+                usuario = usuario_de_token(sesion, token)
             if usuario is None:
-                raise HTTPException(401, "Credenciales inválidas", headers={"WWW-Authenticate": "Basic"})
+                # La web no debe abrir el diálogo de autenticación básica del navegador.
+                web = request.headers.get("x-syllabusai-web") == "1"
+                cabeceras = {} if web else {"WWW-Authenticate": "Basic"}
+                raise HTTPException(401, "Credenciales inválidas o sesión vencida", headers=cabeceras)
             return {"id": usuario.id, "nombre": usuario.nombre, "correo": usuario.correo,
-                    "rol": str(usuario.rol)}
+                    "rol": str(usuario.rol), "carrera": usuario.carrera}
 
     Usuario = Annotated[dict, Depends(usuario_actual)]
 
@@ -123,15 +134,23 @@ def crear_app(obtener_contenedor=contenedor_por_defecto) -> FastAPI:
             "instrumentos": sorted(set(indicaciones.INSTRUMENTOS.values())),
         }
 
+    def asignatura_dict(a: Asignatura) -> dict:
+        try:
+            ficha, error = ficha_de(a).model_dump(mode="json"), None
+        except ValueError as e:  # ficha extraída de la malla todavía incompleta
+            ficha, error = a.ficha, str(e).splitlines()[0]
+        return {"id": a.id, "codigo": a.codigo, "nombre": a.nombre, "carrera": a.carrera,
+                "nivel": a.nivel, "horas": a.horas, "creditos": a.creditos, "ficha": ficha,
+                "ficha_valida": error is None, "error_ficha": error, "origen": a.origen or "ejemplo",
+                "revisada": bool(a.revisada), "malla_id": a.malla_id, "avisos": a.avisos or []}
+
     @app.get("/asignaturas")
-    def asignaturas(c: Cont, _: Usuario) -> list[dict]:
+    def asignaturas(c: Cont, _: Usuario, carrera: str | None = None) -> list[dict]:
         with c.fabrica() as sesion:
-            return [
-                {"id": a.id, "codigo": a.codigo, "nombre": a.nombre, "carrera": a.carrera,
-                 "nivel": a.nivel, "horas": a.horas, "creditos": a.creditos,
-                 "ficha": ficha_de(a).model_dump(mode="json")}
-                for a in sesion.scalars(select(Asignatura).order_by(Asignatura.codigo))
-            ]
+            consulta = select(Asignatura).order_by(Asignatura.carrera, Asignatura.nivel, Asignatura.codigo)
+            if carrera:
+                consulta = consulta.where(Asignatura.carrera == carrera)
+            return [asignatura_dict(a) for a in sesion.scalars(consulta)]
 
     # --- corpus --------------------------------------------------------------------------
 
@@ -168,7 +187,10 @@ def crear_app(obtener_contenedor=contenedor_por_defecto) -> FastAPI:
                 con_errores(procesar_documento, sesion, c.recuperador, documento, c.config)
                 sincronizar_vigencia(sesion, c.recuperador)
                 sesion.commit()
-                return documento_dict(c, documento)
+                datos = documento_dict(c, documento)
+        # Los docentes se enteran en el panel de noticias (resumen del agente con RAG).
+        datos["noticia"] = c.noticias.documento_publicado(datos["id"], u["id"])
+        return datos
 
     @app.post("/documentos/{documento_id}/indexar")
     def indexar_documento(documento_id: int, c: Cont, _: Admin) -> dict:
@@ -184,12 +206,20 @@ def crear_app(obtener_contenedor=contenedor_por_defecto) -> FastAPI:
         estado: EstadoDocumento
 
     @app.patch("/documentos/{documento_id}")
-    def cambiar_documento(documento_id: int, cambio: CambioDocumento, c: Cont, _: Admin) -> dict:
+    def cambiar_documento(documento_id: int, cambio: CambioDocumento, c: Cont, u: Admin) -> dict:
         with c.fabrica() as sesion:
+            anterior = sesion.get(Documento, documento_id)
+            estado_previo = anterior.estado if anterior else None
             documento = con_errores(cambiar_estado, sesion, documento_id, cambio.estado)
             sincronizar_vigencia(sesion, c.recuperador)
             sesion.commit()
-            return documento_dict(c, documento)
+            datos = documento_dict(c, documento)
+        if estado_previo != cambio.estado:
+            if cambio.estado == EstadoDocumento.OBSOLETO:
+                c.noticias.documento_retirado(documento_id, u["id"])
+            else:
+                c.noticias.documento_publicado(documento_id, u["id"])
+        return datos
 
     class Busqueda(BaseModel):
         consulta: str
@@ -348,9 +378,10 @@ def crear_app(obtener_contenedor=contenedor_por_defecto) -> FastAPI:
         return respuesta_silabo(c, silabo_id)
 
     @app.post("/silabos/{silabo_id}/exportar")
-    def exportar(silabo_id: int, c: Cont, u: Usuario, formato: str = "docx") -> FileResponse:
+    def exportar(silabo_id: int, c: Cont, u: Usuario, formato: str = "docx",
+                 borrador: bool = False) -> FileResponse:
         comprobar_silabo(c, u, silabo_id)
-        ruta = con_errores(c.servicio.exportar, silabo_id, formato)
+        ruta = con_errores(c.servicio.exportar, silabo_id, formato, borrador)
         tipo = ("application/pdf" if formato == "pdf" else
                 "application/vnd.openxmlformats-officedocument.wordprocessingml.document")
         return FileResponse(ruta, media_type=tipo, filename=ruta.name)
@@ -363,6 +394,9 @@ def crear_app(obtener_contenedor=contenedor_por_defecto) -> FastAPI:
             ruta_csv, _ = exportar_eventos(sesion, c.config.telemetria.directorio)
         return FileResponse(ruta_csv, media_type="text/csv", filename=ruta_csv.name)
 
+    from syllabusai.web.rutas import registrar_rutas_web
+
+    registrar_rutas_web(app, Cont, Usuario, Admin, comprobar_silabo, con_errores, asignatura_dict)
     return app
 
 

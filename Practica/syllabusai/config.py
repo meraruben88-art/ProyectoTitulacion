@@ -32,9 +32,14 @@ class ConfigBaseVectorial(BaseModel):
 
 
 class ConfigEmbeddings(BaseModel):
-    proveedor: Literal["ninguno", "sentence_transformers", "hash"] = "ninguno"
+    # nvidia: API de embeddings de NVIDIA Build o de un NIM propio (p. ej. en NVIDIA Brev).
+    proveedor: Literal["ninguno", "sentence_transformers", "hash", "nvidia"] = "ninguno"
     modelo: str = "BAAI/bge-m3"
     dimension: int = 1024
+    url: str = "https://integrate.api.nvidia.com/v1"
+    api_key_env: str = "NVIDIA_API_KEY"
+    # Algunos modelos de NVIDIA (nv-embedqa) distinguen pasajes de consultas.
+    tipo_entrada: str | None = None
 
 
 class ConfigRecuperacion(BaseModel):
@@ -47,10 +52,19 @@ class ConfigRecuperacion(BaseModel):
 
 
 class ConfigLLM(BaseModel):
-    proveedor: Literal["simulado", "openai"] = "simulado"
+    # simulado · openai: vLLM u otro servidor compatible · nvidia: NVIDIA Build (API alojada) o
+    # un NIM desplegado en NVIDIA Brev; ambos hablan la API de OpenAI.
+    proveedor: Literal["simulado", "openai", "nvidia"] = "simulado"
     url: str = "http://localhost:8000/v1"
     modelo: str = "Qwen/Qwen3-8B"
     api_key: str = "EMPTY"
+    # Variable de entorno con la clave (la clave nunca se escribe en la configuración).
+    api_key_env: str | None = None
+    # Cómo se pide la salida estructurada: json_schema (OpenAI/vLLM/NIM), guided_json (nvext de
+    # NIM), json_object o ninguna (solo instrucciones + validación del harness).
+    salida_estructurada: Literal["json_schema", "guided_json", "json_object", "ninguna"] = "json_schema"
+    # Parámetros adicionales del cuerpo de la petición (p. ej. {"reasoning_effort": "low"}).
+    extra: dict = {}
     temperatura: float = 0.2
     max_tokens: int = 3072
     timeout_s: float = 180
@@ -66,6 +80,32 @@ class ConfigAgente(BaseModel):
 class ConfigExportacion(BaseModel):
     directorio: Path = Path("data/exportados")
     soffice: str | None = None
+
+
+class ConfigWeb(BaseModel):
+    sesion_horas: float = 12
+    cookie: str = "syllabusai_sesion"
+    cookie_segura: bool = False  # True detrás de HTTPS
+
+
+class FuenteExterna(BaseModel):
+    nombre: str
+    url: str
+    tipo: Literal["rss", "pagina"] = "pagina"
+    carrera: str = "TODAS"
+
+
+class ConfigNoticias(BaseModel):
+    # Cada cuántos minutos el vigía revisa las fuentes externas y la bandeja de documentos.
+    intervalo_min: float = 30
+    activo: bool = True
+    fuentes: list[FuenteExterna] = []
+    # Carpeta en que el administrador puede dejar documentos para que se ingesten solos.
+    bandeja: Path | None = Path("data/bandeja")
+
+
+class ConfigMallas(BaseModel):
+    directorio: Path = Path("MALLAS")
 
 
 class ConfigTelemetria(BaseModel):
@@ -85,6 +125,9 @@ class Config(BaseModel):
     agente: ConfigAgente = ConfigAgente()
     exportacion: ConfigExportacion = ConfigExportacion()
     telemetria: ConfigTelemetria = ConfigTelemetria()
+    web: ConfigWeb = ConfigWeb()
+    noticias: ConfigNoticias = ConfigNoticias()
+    mallas: ConfigMallas = ConfigMallas()
 
 
 def _anclar(ruta: Path | None) -> Path | None:
@@ -101,10 +144,21 @@ def cargar_config(ruta: Path | str | None = None) -> Config:
     # Despliegue (Docker/Apptainer): la dirección del modelo puede venir del entorno.
     if os.environ.get("SYLLABUSAI_LLM_URL"):
         config.llm.url = os.environ["SYLLABUSAI_LLM_URL"]
+    if os.environ.get("SYLLABUSAI_LLM_MODELO"):
+        config.llm.modelo = os.environ["SYLLABUSAI_LLM_MODELO"]
     config.corpus.directorio = _anclar(config.corpus.directorio)
     config.formato = _anclar(config.formato)
     config.base_vectorial.ruta = _anclar(config.base_vectorial.ruta)
     config.agente.checkpoints = _anclar(config.agente.checkpoints)
     config.exportacion.directorio = _anclar(config.exportacion.directorio)
     config.telemetria.directorio = _anclar(config.telemetria.directorio)
+    config.noticias.bandeja = _anclar(config.noticias.bandeja)
+    config.mallas.directorio = _anclar(config.mallas.directorio)
     return config
+
+
+def clave_api(api_key: str, variable: str | None) -> str:
+    """La clave de la variable de entorno si existe; si no, la de la configuración."""
+    if variable and os.environ.get(variable):
+        return os.environ[variable]
+    return api_key

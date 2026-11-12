@@ -77,6 +77,9 @@ class Usuario(Base):
     correo: Mapped[str] = mapped_column(String(200), unique=True)
     rol: Mapped[Rol] = mapped_column(_enum(Rol))
     hash_contrasena: Mapped[str] = mapped_column(String(200))
+    # Cuentas de la web: el administrador desactiva una cuenta sin borrar sus sílabos.
+    activo: Mapped[bool | None] = mapped_column(default=True)
+    carrera: Mapped[str | None] = mapped_column(String(100))
 
     silabos: Mapped[list["Silabo"]] = relationship(back_populates="docente")
     documentos: Mapped[list["Documento"]] = relationship(back_populates="cargador")
@@ -119,8 +122,15 @@ class Asignatura(Base):
     # 2026, campos tipo A y B): horas por componente, RA oficiales, contenidos mínimos, etc.
     # Se valida con `syllabusai.esquemas.FichaCurricular`.
     ficha: Mapped[dict[str, Any]] = mapped_column(default=dict)
+    # Malla del CES de la que se extrajo la asignatura; nulo en el catálogo de ejemplo.
+    malla_id: Mapped[int | None] = mapped_column(ForeignKey("malla.id"))
+    origen: Mapped[str | None] = mapped_column(String(20))  # ejemplo | malla_ces | manual
+    # La ficha extraída automáticamente la revisa el administrador antes de publicarse.
+    revisada: Mapped[bool | None] = mapped_column(default=False)
+    avisos: Mapped[list[str] | None] = mapped_column(JSON)
 
     silabos: Mapped[list["Silabo"]] = relationship(back_populates="asignatura")
+    malla: Mapped["Malla | None"] = relationship(back_populates="asignaturas")
 
 
 class Silabo(Base):
@@ -232,3 +242,97 @@ class Evento(Base):
     fecha: Mapped[datetime] = mapped_column(default=_ahora)
 
     silabo: Mapped[Silabo | None] = relationship(back_populates="eventos")
+
+
+class SesionWeb(Base):
+    """Sesión de la interfaz web: se guarda el hash del token de la cookie, nunca el token."""
+
+    __tablename__ = "sesion_web"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    token_hash: Mapped[str] = mapped_column(String(64), unique=True)
+    usuario_id: Mapped[int] = mapped_column(ForeignKey("usuario.id"))
+    creada: Mapped[datetime] = mapped_column(default=_ahora)
+    expira: Mapped[datetime]
+
+    usuario: Mapped[Usuario] = relationship()
+
+
+class Malla(Base):
+    """Malla curricular aprobada por el CES (carpeta MALLAS): el PDF y lo que se extrajo de él."""
+
+    __tablename__ = "malla"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    carrera: Mapped[str] = mapped_column(String(100))  # sigla: ITI, IND, ELE
+    nombre: Mapped[str] = mapped_column(String(300))
+    archivo: Mapped[str] = mapped_column(String(500))
+    documento_id: Mapped[int | None] = mapped_column(ForeignKey("documento.id"))
+    paginas: Mapped[int] = mapped_column(default=0)
+    estado: Mapped[str] = mapped_column(String(20), default="extraida")  # extraida | publicada
+    avisos: Mapped[list[str]] = mapped_column(JSON, default=list)
+    fecha_carga: Mapped[datetime] = mapped_column(default=_ahora)
+
+    documento: Mapped[Documento | None] = relationship()
+    asignaturas: Mapped[list[Asignatura]] = relationship(
+        back_populates="malla", order_by="Asignatura.codigo"
+    )
+
+
+class Noticia(Base):
+    """Novedades para los docentes: cambios del formato de sílabo, documentos nuevos o
+    reemplazados, mallas y avisos de fuentes externas. El resumen lo redacta el agente a partir
+    de los fragmentos recuperados (RAG) y guarda sus citas."""
+
+    __tablename__ = "noticia"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    titulo: Mapped[str] = mapped_column(String(300))
+    resumen: Mapped[str] = mapped_column(Text)
+    puntos: Mapped[list[str]] = mapped_column(JSON, default=list)
+    categoria: Mapped[str] = mapped_column(String(30))  # silabo | documento | normativa | malla | externa | aviso
+    origen: Mapped[str] = mapped_column(String(20))  # automatica | manual | externa
+    carrera: Mapped[str] = mapped_column(String(100), default="TODAS")
+    importante: Mapped[bool] = mapped_column(default=False)
+    documento_id: Mapped[int | None] = mapped_column(ForeignKey("documento.id"))
+    fuente_url: Mapped[str | None] = mapped_column(String(1000))
+    citas: Mapped[list[str]] = mapped_column(JSON, default=list)
+    autor_id: Mapped[int | None] = mapped_column(ForeignKey("usuario.id"))
+    fecha: Mapped[datetime] = mapped_column(default=_ahora)
+
+    documento: Mapped[Documento | None] = relationship()
+
+
+class FuenteNoticias(Base):
+    """Página o canal RSS que el vigía revisa periódicamente."""
+
+    __tablename__ = "fuente_noticias"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    nombre: Mapped[str] = mapped_column(String(200))
+    url: Mapped[str] = mapped_column(String(1000), unique=True)
+    tipo: Mapped[str] = mapped_column(String(10), default="pagina")  # rss | pagina
+    carrera: Mapped[str] = mapped_column(String(100), default="TODAS")
+    activa: Mapped[bool] = mapped_column(default=True)
+    ultimo_hash: Mapped[str | None] = mapped_column(String(64))
+    vistos: Mapped[list[str]] = mapped_column(JSON, default=list)  # entradas RSS ya publicadas
+    ultima_revision: Mapped[datetime | None]
+    ultimo_error: Mapped[str | None] = mapped_column(Text)
+
+
+class ProyectoIntegrador(Base):
+    """PIS (Proyecto Interdisciplinario Socioformativo) del sílabo. Va aparte de las secciones
+    del flujo: el agente lo propone y el docente lo cambia cuando quiera."""
+
+    __tablename__ = "proyecto_integrador"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    silabo_id: Mapped[int] = mapped_column(ForeignKey("silabo.id"), unique=True)
+    contenido: Mapped[dict[str, Any]] = mapped_column(default=dict)
+    estado: Mapped[str] = mapped_column(String(20), default="vacio")  # vacio | propuesto | editado
+    historial: Mapped[list[dict[str, Any]]] = mapped_column(JSON, default=list)
+    citas: Mapped[list[dict[str, Any]]] = mapped_column(JSON, default=list)
+    hallazgos: Mapped[list[dict[str, Any]]] = mapped_column(JSON, default=list)
+    actualizado: Mapped[datetime] = mapped_column(default=_ahora, onupdate=_ahora)
+
+    silabo: Mapped[Silabo] = relationship()

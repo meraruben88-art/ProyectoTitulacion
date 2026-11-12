@@ -53,6 +53,9 @@ def construir(datos: dict) -> list[Elemento]:
         Titulo(f"{datos['formato']['nombre'].upper()} ({datos['formato']['version']})", 0),
         Parrafo(ident.get("nombre_pf", "")),
     ]
+    if datos.get("borrador"):
+        el.append(Parrafo("BORRADOR — documento de trabajo exportado antes de cerrar la revisión; "
+                          "no es la versión oficial del sílabo.", cursiva=True))
 
     el += [Titulo(t["identificacion"]), Tabla(clave_valor=True, encabezado=False, filas=[
         ["Nombre del Proyecto Formativo", _txt(ident.get("nombre_pf"))],
@@ -199,7 +202,69 @@ def construir(datos: dict) -> list[Elemento]:
           f"{datos_g.get('fecha_elaboracion') or '[ ]'}\nFirma:"),
          f"Coordinación/Comité Curricular\nNombre: {datos_g.get('aprobador') or ''}\nFecha:\nFirma:"],
     ], anchos=[0.5, 0.5])]
+    if datos.get("pis"):
+        el += construir_pis(datos["pis"])
+    if datos.get("borrador") and datos.get("observaciones"):
+        el += [Titulo("Observaciones pendientes del borrador"), Parrafo(_lista(datos["observaciones"]))]
     return el
+
+
+def construir_pis(pis: dict) -> list[Elemento]:
+    """Anexo con el PIS en el orden del formato de presentación de la guía (sección 12)."""
+    inv = pis.get("investigacion") or {}
+
+    def filas(campos: list[str], items: list[dict]) -> list[list[str]]:
+        return [[_txt(item.get(c)) for c in campos] for item in items or []]
+
+    return [
+        Titulo("Anexo. Proyecto Interdisciplinario Socioformativo (PIS)"),
+        Tabla(clave_valor=True, encabezado=False, anchos=[0.28, 0.72], filas=[
+            ["1. Identificación", (f"{_txt(pis.get('titulo'))}\nCarrera: {_txt(pis.get('carrera'))} · "
+                                   f"Periodo: {_txt(pis.get('periodo'))} · Nivel: {_txt(pis.get('nivel'))}\n"
+                                   f"Equipo: {', '.join(pis.get('equipo_docente') or []) or '—'}")],
+            ["2. Problema del contexto", (f"{_txt(pis.get('problema'))}\nContexto: {_txt(pis.get('contexto'))}\n"
+                                          f"Pregunta de actuación: {_txt(pis.get('pregunta_reto'))}\n"
+                                          f"Delimitación: {_txt(pis.get('delimitacion'))}")],
+            ["3. Justificación", _txt(pis.get("justificacion"))],
+            ["4. Propósito", _txt(pis.get("proposito"))],
+            ["5. Competencias", _lista(pis.get("competencias"))],
+            ["6. PF participantes", _lista(pis.get("pf_participantes"))],
+            ["Aporte de este PF", _txt(pis.get("aporte_este_pf"))],
+        ]),
+        Titulo("7. Matriz de articulación de RAP", 2),
+        Tabla([["Competencia", "PF", "RAP", "Aporte al PIS", "Momento", "Evidencia parcial"]]
+              + filas(["competencia", "pf", "rap", "aporte", "momento", "evidencia_parcial"],
+                      pis.get("articulacion")),
+              anchos=[0.16, 0.14, 0.22, 0.2, 0.12, 0.16]),
+        Tabla(clave_valor=True, encabezado=False, anchos=[0.28, 0.72], filas=[
+            ["8. Evidencia integradora", (f"{_txt(pis.get('evidencia_integradora'))}\n"
+                                          f"Integra: {_txt(pis.get('aportes_integrados'))}\n"
+                                          f"Criterios de logro:\n{_lista(pis.get('criterios_logro'))}")],
+            ["9. Investigación", (f"Pregunta: {_txt(inv.get('pregunta'))}\nEnfoque: {_txt(inv.get('enfoque'))}\n"
+                                  f"Fuentes y técnicas: {_txt(inv.get('fuentes_tecnicas'))}\n"
+                                  f"Hallazgos: {_txt(inv.get('hallazgos_esperados'))}")],
+        ]),
+        Titulo("9. Fases de la actuación", 2),
+        Tabla([["Etapa", "Actuación de los estudiantes", "Aporte de los PF", "Resultado para la siguiente"]]
+              + filas(["etapa", "actuacion", "aporte_pf", "resultado"], pis.get("etapas")),
+              anchos=[0.18, 0.32, 0.22, 0.28]),
+        Titulo("10. Plan de actividades y cronograma", 2),
+        Tabla([["Semana", "Etapa", "Actividad", "PF / RAP", "Responsable", "Evidencia"]]
+              + filas(["semana", "etapa", "actividad", "pf_rap", "responsable", "evidencia"],
+                      pis.get("cronograma")),
+              anchos=[0.1, 0.16, 0.24, 0.18, 0.14, 0.18]),
+        Titulo("11. Roles y responsabilidades", 2),
+        Tabla([["Actor", "Responsabilidades"]] + filas(["actor", "responsabilidades"], pis.get("roles")),
+              anchos=[0.28, 0.72]),
+        Tabla(clave_valor=True, encabezado=False, anchos=[0.28, 0.72], filas=[
+            ["12. Evaluación", _txt(pis.get("evaluacion"))],
+            ["13. Recursos y condiciones", _txt(pis.get("recursos"))],
+            ["14. Socialización", _txt(pis.get("socializacion"))],
+            ["15. Reflexión y mejora", _lista(pis.get("reflexion"))],
+            ["16. Resultados e impacto", _txt(pis.get("impacto"))],
+            ["Prueba de interdisciplinariedad", _txt(pis.get("prueba_interdisciplinariedad"))],
+        ]),
+    ]
 
 
 def _tipos(tipos: list[str]) -> str:

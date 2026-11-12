@@ -64,3 +64,18 @@ telemetria:
   directorio: data/metricas
   # Endpoint Prometheus de vLLM para memoria de GPU y throughput (RF-53).
   metricas_vllm: http://localhost:8000/metrics
+
+web:
+  sesion_horas: 12
+  cookie: syllabusai_sesion
+  cookie_segura: false   # true cuando la página se sirva por HTTPS
+
+noticias:
+  # El vigía revisa las fuentes externas y la bandeja cada tantos minutos.
+  intervalo_min: 30
+  activo: true
+  # Deje aquí un PDF/DOCX (y opcionalmente un .yaml con sus metadatos) para que se ingiera solo.
+  bandeja: data/bandeja
+
+mallas:
+  directorio: MALLAS

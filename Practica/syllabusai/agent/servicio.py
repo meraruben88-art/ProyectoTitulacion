@@ -17,6 +17,7 @@ from sqlalchemy import delete, select
 from sqlalchemy.orm import Session, sessionmaker
 
 from syllabusai.agent import herramientas, indicaciones, planificacion
+from syllabusai.agent.harness import ErrorHarness, Harness
 from syllabusai.config import Config
 from syllabusai.db.modelos import (
     Asignatura,
@@ -37,7 +38,7 @@ from syllabusai.esquemas import FichaCurricular
 from syllabusai.formato.definicion import DefinicionSeccion, Formato
 from syllabusai.formato.esquemas import ESQUEMAS, contenido_vacio
 from syllabusai.ingest.catalogo import ficha_de
-from syllabusai.llm.base import ClienteLLM, ErrorLLM, SolicitudGeneracion
+from syllabusai.llm.base import ClienteLLM
 from syllabusai.llm.prompts import VERSION_PROMPTS, construir_mensajes, esquema_salida
 from syllabusai.retrieval.lexico import normalizar
 from syllabusai.retrieval.recuperador import FragmentoRecuperado, Recuperador
@@ -66,6 +67,11 @@ class ServicioSilabos:
         self.config = config
         # Quien sigue en vivo la generación de un sílabo (API en streaming, RNF-07).
         self.oyentes: dict[int, Callable[[dict], None]] = {}
+
+    @property
+    def harness(self) -> Harness:
+        # Se construye sobre el modelo vigente: las pruebas y la API pueden cambiarlo en caliente.
+        return Harness(self.llm)
 
     def _emitir(self, silabo_id: int, tipo: str, **datos) -> None:
         oyente = self.oyentes.get(silabo_id)
@@ -414,24 +420,16 @@ class ServicioSilabos:
         self, definicion: DefinicionSeccion, contexto: dict,
         al_token: Callable[[str], None] | None = None,
     ):
-        modelo_salida = esquema_salida(definicion.clave)
-        mensajes = construir_mensajes(definicion, contexto)
-        ultimo_error = None
-        for _ in range(2):  # un reintento con el error de validación como retroalimentación
-            solicitud = SolicitudGeneracion(
-                clave=definicion.clave, mensajes=mensajes,
-                esquema=modelo_salida.model_json_schema(), contexto=contexto, al_token=al_token,
+        """La sección se genera dentro del harness: salida validada contra el esquema de la
+        sección, con un reintento que le devuelve al modelo el error de validación."""
+        try:
+            resultado = self.harness.generar(
+                definicion.clave, construir_mensajes(definicion, contexto),
+                esquema_salida(definicion.clave), contexto=contexto, al_token=al_token,
             )
-            try:
-                respuesta = self.llm.generar(solicitud)
-                return modelo_salida.model_validate(respuesta.datos), respuesta
-            except (ErrorLLM, ValidationError) as error:
-                ultimo_error = error
-                mensajes = mensajes + [{"role": "user", "content": (
-                    f"Tu respuesta anterior no es válida: {str(error)[:800]}. Devuelve solo el "
-                    "objeto JSON corregido."
-                )}]
-        raise ErrorServicio(f"El modelo no produjo una respuesta válida: {ultimo_error}")
+        except ErrorHarness as error:
+            raise ErrorServicio(str(error)) from error
+        return resultado.salida, resultado.respuesta
 
     def _guardar_version(
         self, seccion: Seccion, origen: OrigenVersion, contenido: dict,
@@ -453,10 +451,7 @@ class ServicioSilabos:
         ficha = ficha_de(silabo.asignatura)
         hallazgos = reglas.validar_seccion(seccion.clave, version.contenido, ficha, silabo.datos_generales)
         if seccion.clave in reglas.CON_EVIDENCIA and not version.citas:
-            hallazgos.append(reglas.Hallazgo(
-                "RF-32", Severidad.BLOQUEANTE, "La sección no tiene ninguna fuente asociada.",
-                seccion.clave,
-            ))
+            hallazgos.append(reglas.sin_fuentes(seccion.clave, version.origen == OrigenVersion.DOCENTE))
         return hallazgos
 
     def _reemplazar_hallazgos(
@@ -574,6 +569,7 @@ class ServicioSilabos:
                     clave=s.clave, estado=s.estado, contenido=self._contenido_actual(s),
                     citas_validas=sum(1 for c in citas if c.documento_id in vigentes),
                     citas_obsoletas=sum(1 for c in citas if c.documento_id not in vigentes),
+                    redactada_por_docente=version is not None and version.origen == OrigenVersion.DOCENTE,
                 )
             hallazgos = reglas.validar_silabo(
                 self.formato.claves, estados, ficha_de(silabo.asignatura), silabo.datos_generales
@@ -589,33 +585,85 @@ class ServicioSilabos:
             sesion.commit()
             return self._hallazgos(silabo)
 
-    def exportar(self, silabo_id: int, formato: str = "docx") -> Path:
+    def guardar_documento(self, silabo_id: int, secciones: dict[str, dict]) -> dict:
+        """Correcciones del docente sobre el documento completo, después de aprobar el flujo.
+
+        Cada sección que cambió queda como una versión nueva de origen docente (con las citas de
+        la versión en que se basa) y sigue aprobada; luego se verifica el sílabo entero. Los
+        cambios a datos oficiales no se impiden: la verificación los señala.
+        """
+        with self.fabrica() as sesion:
+            silabo = self._silabo(sesion, silabo_id)
+            cambiadas = []
+            for clave, contenido in secciones.items():
+                seccion = self._seccion(silabo, clave)
+                try:
+                    limpio = ESQUEMAS[clave].model_validate(contenido).model_dump(mode="json")
+                except ValidationError as error:
+                    raise ErrorServicio(f"El contenido no cumple el esquema de «{clave}»: {error}") from error
+                anterior = self.ultima_version(seccion)
+                if anterior is not None and anterior.contenido == limpio:
+                    continue
+                fuentes = self._fragmentos_citados(anterior) if anterior is not None else []
+                version = self._guardar_version(seccion, OrigenVersion.DOCENTE, limpio, fuentes,
+                                                nota="Corrección en el documento final")
+                if seccion.estado != EstadoSeccion.APROBADA:
+                    seccion.estado = EstadoSeccion.PROPUESTA
+                propuesta = self.ultima_version(seccion, OrigenVersion.AGENTE)
+                registrar(sesion, "correccion", silabo_id=silabo.id, paso=clave, payload={
+                    "version": version.n, "documento_final": True,
+                    "distancia_edicion": distancia_edicion(
+                        texto_plano(propuesta.contenido if propuesta else {}), texto_plano(limpio)),
+                })
+                cambiadas.append(clave)
+            if cambiadas and silabo.estado == EstadoSilabo.EXPORTADO:
+                silabo.estado = EstadoSilabo.APROBADO
+            sesion.commit()
+        self.verificar(silabo_id)
+        return {"cambiadas": cambiadas}
+
+    def exportar(self, silabo_id: int, formato: str = "docx", borrador: bool = False) -> Path:
+        """Exporta el sílabo. La versión final exige todas las secciones aprobadas y ningún
+        hallazgo bloqueante (RF-42, RF-36); el borrador se exporta siempre, marcado como tal y
+        con las observaciones pendientes al final."""
         from syllabusai.export import exportar_silabo
 
         self.verificar(silabo_id)
         with self.fabrica() as sesion:
             silabo = self._silabo(sesion, silabo_id)
             pendientes = [s.clave for s in silabo.secciones if s.estado != EstadoSeccion.APROBADA]
-            if pendientes:
-                raise ErrorServicio(f"Hay secciones sin aprobar: {', '.join(pendientes)} (RF-42)")
             abiertos = [h for h in silabo.hallazgos
                         if not h.resuelto and h.severidad == Severidad.BLOQUEANTE]
-            if abiertos:
-                raise ErrorServicio(f"Hay {len(abiertos)} hallazgo(s) bloqueante(s) sin resolver (RF-36)")
+            if not borrador:
+                if pendientes:
+                    raise ErrorServicio(f"Hay secciones sin aprobar: {', '.join(pendientes)} (RF-42)")
+                if abiertos:
+                    raise ErrorServicio(f"Hay {len(abiertos)} hallazgo(s) bloqueante(s) sin resolver (RF-36)")
             inicio = time.perf_counter()
             datos = self.datos_exportacion(silabo)
+            if borrador:
+                datos["borrador"] = True
+                datos["observaciones"] = [
+                    f"[{h.severidad}] {h.regla}: {h.mensaje}" for h in silabo.hallazgos if not h.resuelto
+                ] + [f"Sección sin aprobar: {c}" for c in pendientes]
             ruta = exportar_silabo(datos, formato, self.config.exportacion)
-            silabo.estado = EstadoSilabo.EXPORTADO
+            if not borrador:
+                silabo.estado = EstadoSilabo.EXPORTADO
             creado = silabo.creado if silabo.creado.tzinfo else silabo.creado.replace(tzinfo=UTC)
             registrar(sesion, "exportacion", silabo_id=silabo.id, paso=formato,
                       latencia_ms=(time.perf_counter() - inicio) * 1000,
-                      payload={"archivo": str(ruta),
+                      payload={"archivo": str(ruta), "borrador": borrador,
                                "duracion_sesion_min": (datetime.now(UTC) - creado).total_seconds() / 60})
             sesion.commit()
             return ruta
 
     def datos_exportacion(self, silabo: Silabo) -> dict:
+        from syllabusai.db.modelos import ProyectoIntegrador
+
+        pis = Session.object_session(silabo).scalar(
+            select(ProyectoIntegrador).where(ProyectoIntegrador.silabo_id == silabo.id))
         return {
+            "pis": pis.contenido if pis is not None and pis.estado != "vacio" else None,
             "formato": {"nombre": self.formato.nombre, "version": self.formato.version},
             "silabo": {"id": silabo.id, "periodo": silabo.periodo,
                        "datos_generales": silabo.datos_generales},

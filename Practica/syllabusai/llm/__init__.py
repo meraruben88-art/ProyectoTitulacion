@@ -1,11 +1,12 @@
-"""Clientes de modelo de lenguaje: vLLM (compatible con OpenAI) y simulado."""
+"""Clientes de modelo de lenguaje: compatibles con OpenAI (vLLM, NVIDIA Build, NIM en Brev) y
+simulado."""
 
 from syllabusai.config import ConfigLLM
 from syllabusai.llm.base import ClienteLLM
 
 
 def crear_cliente(config: ConfigLLM) -> ClienteLLM:
-    if config.proveedor == "openai":
+    if config.proveedor in ("openai", "nvidia"):
         from syllabusai.llm.openai_compatible import ClienteOpenAICompatible
 
         return ClienteOpenAICompatible(config)

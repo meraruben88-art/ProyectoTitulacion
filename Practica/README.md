@@ -31,7 +31,37 @@ determinista que permite recorrer y probar todo el flujo sin GPU. No redacta com
 y solo entiende los pedidos del docente que reconoce `agent/indicaciones.py` (ver el manual de
 usuario); el modelo real recibe además el texto libre.
 
-## En el servidor con la NVIDIA A100
+## Página web (administrador y docentes)
+
+```powershell
+.venv\Scripts\syllabusai mallas                      # importa las mallas del CES de la carpeta MALLAS
+.venv\Scripts\syllabusai admin --correo usted@... --nombre "Su nombre"   # cuenta de administrador
+.venv\Scripts\syllabusai web                         # http://127.0.0.1:8080
+```
+
+- **Mallas del CES** (panel fijo arriba a la izquierda): cada PDF se indexa para el agente, se
+  transcribe su perfil de egreso y se extraen las asignaturas con RA, contenidos mínimos y horas
+  (`ingest/mallas.py`, `ingest/reparacion.py`). El administrador revisa cada ficha antes de publicarla.
+- **Noticias** (debajo de las mallas): el agente redacta con RAG un resumen cuando cambia un
+  documento, llega una malla o una fuente externa (RSS o página) publica algo; dice qué secciones
+  revisar y cuántos sílabos citaban la versión anterior. El vigía (`noticias/vigia.py`) revisa las
+  fuentes y la bandeja `data/bandeja` cada 30 minutos. Los docentes pueden preguntarle al agente.
+- **Nuevo sílabo**: formulario con el agente; luego revisión por secciones con conversación en vivo.
+- **PIS** aparte, dentro del agente (`pis/`): propuesta con la Guía de construcción de PIS y los PF
+  del mismo nivel de la malla, edición libre y criterios de validación de la guía.
+- **Documento final editable** y exportación DOCX/PDF (final o borrador con observaciones).
+- **Administración**: cuentas de docentes (una a una o en lote), documentos, mallas, noticias y modelo.
+
+El agente trabaja dentro de un **harness** (`agent/harness.py`): herramientas cerradas por tarea,
+salida validada contra el esquema con reintento, citas verificadas y telemetría. Los flujos son
+grafos de LangGraph (sílabo con pausas del docente, PIS y noticias).
+
+## Con NVIDIA Build o NVIDIA Brev (modelo de 120B)
+
+Ver [docs/nvidia.md](docs/nvidia.md): `config/config.nvidia.yaml` (API alojada, clave en
+`NVIDIA_API_KEY`) o `config/config.brev.yaml` (NIM en una instancia de Brev).
+
+## En el servidor con la NVIDIA A100 (configuración anterior)
 
 ```bash
 pip install -e .[embeddings]                         # BGE-M3 para la búsqueda densa

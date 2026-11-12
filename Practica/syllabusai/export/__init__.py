@@ -16,6 +16,8 @@ class ErrorExportacion(RuntimeError):
 def _nombre_base(datos: dict) -> str:
     ident = datos["secciones"].get("identificacion", {})
     base = f"silabo_{ident.get('codigo', 'PF')}_{datos['silabo']['periodo']}_{datos['silabo']['id']}"
+    if datos.get("borrador"):
+        base += "_borrador"
     return re.sub(r"[^\w.-]+", "_", base)
 
 

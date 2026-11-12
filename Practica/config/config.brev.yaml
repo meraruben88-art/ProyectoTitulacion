@@ -1,0 +1,90 @@
+# Configuración con NVIDIA Brev: el NIM del modelo de 120B corre en una instancia GPU propia.
+# En la instancia de Brev (ver docs/nvidia.md) se levanta el NIM, que expone la API de OpenAI en :8000.
+# Uso: $env:SYLLABUSAI_LLM_URL="http://<ip-o-túnel-de-brev>:8000/v1"; $env:SYLLABUSAI_CONFIG="config/config.brev.yaml"
+# El corpus no sale de la instancia: cumple RNF-01 (ejecución local) como lo pedía la A100.
+# Las rutas relativas se resuelven desde la raíz del repositorio.
+# Para usar otro archivo: variable de entorno SYLLABUSAI_CONFIG.
+
+base_datos:
+  url: sqlite:///data/syllabusai.db
+
+corpus:
+  directorio: data/corpus
+  extensiones: [".pdf", ".docx"]
+
+# Formato institucional del sílabo (decisión D-1): Propuesta de nuevo sílabo UTI 2026.
+formato: config/formato_silabo_2026.yaml
+
+segmentacion:
+  palabras_max: 220        # tamaño objetivo de cada fragmento
+  palabras_solape: 40      # solape entre fragmentos consecutivos de una misma sección
+
+base_vectorial:
+  # Qdrant en modo local (sin servidor). Para un servidor Qdrant, poner url y dejar ruta vacía.
+  ruta: data/qdrant_brev
+  url: null
+  coleccion: fragmentos
+
+embeddings:
+  # BGE-M3 local en la misma instancia (pip install -e .[embeddings]): búsqueda híbrida.
+  # Tras el primer arranque ejecute: syllabusai reindexar
+  proveedor: sentence_transformers
+  modelo: BAAI/bge-m3
+  dimension: 1024
+
+recuperacion:
+  top_k: 6                 # fragmentos que llegan al modelo por consulta (RF-12)
+  candidatos: 24           # candidatos por cada señal antes de la fusión RRF
+  bm25_k1: 1.2
+  bm25_b: 0.75
+  bm25_longitud_media: 160
+  # Abstención (RF-14): mínimo de fragmentos con coincidencia léxica en los tipos requeridos.
+  min_fragmentos: 1
+
+llm:
+  proveedor: nvidia
+  # Se reemplaza con SYLLABUSAI_LLM_URL (dirección del NIM en la instancia de Brev).
+  url: http://localhost:8000/v1
+  # Nemotron 3 Super (120B, MoE con 12B activos). Alternativa de tamaño similar en el mismo
+  # catálogo: openai/gpt-oss-120b (cambie también «extra», ver abajo).
+  modelo: nvidia/nemotron-3-super-120b-a12b
+  # Un NIM propio no exige clave; si se expone con autenticación, ponga aquí la variable.
+  api_key_env: null
+  temperatura: 0.2
+  max_tokens: 8192
+  timeout_s: 300
+  salida_estructurada: json_schema
+  # Respuesta directa en JSON, sin la traza de razonamiento. Para gpt-oss-120b use en su lugar
+  #   extra: {reasoning_effort: low}
+  extra:
+    chat_template_kwargs:
+      enable_thinking: false
+
+agente:
+  checkpoints: data/checkpoints.db
+
+exportacion:
+  directorio: data/exportados
+  # Ruta a soffice (LibreOffice) para DOCX -> PDF (D-7). Si no existe, se usa el renderizador interno.
+  soffice: null
+
+telemetria:
+  directorio: data/metricas
+  # Endpoint Prometheus de vLLM para memoria de GPU y throughput (RF-53).
+  # El NIM expone métricas Prometheus en el mismo puerto (RF-53).
+  metricas_vllm: http://localhost:8000/v1/metrics
+
+web:
+  sesion_horas: 12
+  cookie: syllabusai_sesion
+  cookie_segura: false   # true cuando la página se sirva por HTTPS
+
+noticias:
+  # El vigía revisa las fuentes externas y la bandeja cada tantos minutos.
+  intervalo_min: 30
+  activo: true
+  # Deje aquí un PDF/DOCX (y opcionalmente un .yaml con sus metadatos) para que se ingiera solo.
+  bandeja: data/bandeja
+
+mallas:
+  directorio: MALLAS

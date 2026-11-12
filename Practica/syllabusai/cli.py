@@ -10,6 +10,10 @@
     syllabusai metricas [--vllm]              exporta eventos a CSV/JSON (RF-54)
     syllabusai evaluar                        evaluación completa (SPEC 11) en eval/resultados
     syllabusai api | syllabusai ui            levanta la API (FastAPI) o la interfaz (Streamlit)
+    syllabusai mallas [--reextraer]           importa las mallas del CES de la carpeta MALLAS
+    syllabusai admin --correo ... --nombre ...  crea (o restablece) una cuenta de administrador
+    syllabusai reindexar                      reprocesa el corpus (al cambiar de embeddings)
+    syllabusai web                            página web completa en http://127.0.0.1:8080
 """
 
 import argparse
@@ -185,6 +189,67 @@ def cmd_api(args) -> None:
     uvicorn.run("syllabusai.api.app:app", host=args.host, port=args.port)
 
 
+def cmd_web(args) -> None:
+    import uvicorn
+
+    print(f"SyllabusAI web en http://{args.host}:{args.port}  (Ctrl+C para detener)")
+    uvicorn.run("syllabusai.web.servidor:app", host=args.host, port=args.port)
+
+
+def cmd_mallas(args) -> None:
+    from syllabusai.ingest.importar_mallas import importar_carpeta
+
+    c = _contenedor(args)
+    with c.fabrica() as sesion:
+        admin_id = _admin(sesion).id
+        resultados = importar_carpeta(sesion, c, admin_id, reextraer=args.reextraer)
+        sesion.commit()
+        resumen = [(m.nombre, m.carrera, len(m.asignaturas), m.documento_id, m.avisos, extraida)
+                   for m, extraida in resultados]
+    for nombre, carrera, n, documento_id, avisos, extraida in resumen:
+        print(f"  [{carrera}] {nombre}: {n} asignaturas" + ("" if extraida else " (ya importada)"))
+        for aviso in avisos:
+            print(f"      aviso: {aviso}")
+        if extraida is not None:
+            c.noticias.malla_importada(nombre, carrera, n, documento_id, avisos, admin_id)
+    print("Revise las fichas en la web (Administración › Mallas) antes de publicarlas.")
+
+
+def cmd_reindexar(args) -> None:
+    """Vuelve a procesar todos los documentos del corpus en la base vectorial configurada
+    (necesario al cambiar de modelo de embeddings, p. ej. al pasar a BGE-M3 en NVIDIA)."""
+    from syllabusai.db.modelos import Documento
+    from syllabusai.ingest.pipeline import procesar_documento, sincronizar_vigencia
+
+    c = _contenedor(args)
+    with c.fabrica() as sesion:
+        for documento in sesion.scalars(select(Documento).order_by(Documento.id)):
+            n = procesar_documento(sesion, c.recuperador, documento, c.config)
+            print(f"  [{documento.estado}] {documento.titulo}: {n} fragmentos")
+        sincronizar_vigencia(sesion, c.recuperador)
+        sesion.commit()
+
+
+def cmd_admin(args) -> None:
+    from syllabusai.seguridad import contrasena_temporal, crear_usuario, hash_contrasena
+
+    c = _contenedor(args)
+    clave = args.clave or contrasena_temporal()
+    with c.fabrica() as sesion:
+        usuario = sesion.scalar(select(Usuario).where(Usuario.correo == args.correo.strip().lower()))
+        if usuario is None:
+            crear_usuario(sesion, args.nombre, args.correo, clave, Rol.ADMIN_CORPUS)
+            accion = "creada"
+        else:
+            usuario.rol, usuario.activo = Rol.ADMIN_CORPUS, True
+            usuario.hash_contrasena = hash_contrasena(clave)
+            accion = "restablecida"
+        sesion.commit()
+    print(f"Cuenta de administrador {accion}: {args.correo}")
+    if not args.clave:
+        print(f"Contraseña temporal: {clave}  (cámbiela en la web: menú de su cuenta)")
+
+
 def cmd_ui(args) -> None:
     ruta = RAIZ / "syllabusai" / "ui" / "app.py"
     subprocess.run([sys.executable, "-m", "streamlit", "run", str(ruta), "--server.port",
@@ -251,6 +316,24 @@ def main(argv: list[str] | None = None) -> None:
     p.add_argument("--host", default="127.0.0.1")
     p.add_argument("--port", type=int, default=8080)
     p.set_defaults(func=cmd_api)
+
+    p = sub.add_parser("web", help="levanta la página web completa (API + interfaz + vigía)")
+    p.add_argument("--host", default="127.0.0.1")
+    p.add_argument("--port", type=int, default=8080)
+    p.set_defaults(func=cmd_web)
+
+    p = sub.add_parser("mallas", help="importa las mallas del CES de la carpeta MALLAS")
+    p.add_argument("--reextraer", action="store_true", help="vuelve a extraer aunque ya estén")
+    p.set_defaults(func=cmd_mallas)
+
+    p = sub.add_parser("reindexar", help="reprocesa todo el corpus en la base vectorial configurada")
+    p.set_defaults(func=cmd_reindexar)
+
+    p = sub.add_parser("admin", help="crea o restablece una cuenta de administrador")
+    p.add_argument("--correo", required=True)
+    p.add_argument("--nombre", default="Administrador")
+    p.add_argument("--clave", help="si se omite, se genera una contraseña temporal")
+    p.set_defaults(func=cmd_admin)
 
     p = sub.add_parser("ui", help="levanta la interfaz Streamlit")
     p.add_argument("--host", default="localhost")

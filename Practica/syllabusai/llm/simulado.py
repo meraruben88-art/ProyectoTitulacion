@@ -354,3 +354,109 @@ class ClienteSimulado:
             "cambios_a_escalar": "Cualquier discrepancia en RA, contenidos mínimos, horas o "
                                  "prerrequisitos se reporta al Comité Curricular.",
         }, None
+
+    # --- PIS, noticias y consultas (fuera de las secciones del sílabo) ------------------------
+
+    def _pis(self, ctx: dict) -> tuple[dict, str | None]:
+        a, ficha, datos = ctx["asignatura"], ctx["ficha"], ctx["datos_generales"]
+        actual = ctx.get("actual") or {}
+        p = self._prefs(ctx)
+        problema = (datos.get("contexto_problema") or actual.get("problema") or "").strip()
+        tema = p.get("tema") or (problema.split(".")[0][:120] if problema else "un problema del territorio")
+        companeras = (ctx.get("companeras") or [])[:2]
+        competencia = ficha.get("competencia_especifica") or ""
+        escenario = datos.get("escenario") or "el territorio de la sede"
+        filas = [
+            {"competencia": competencia, "pf": f"{a['codigo']} {a['nombre']}",
+             "rap": f"{ra['codigo']}: {ra['enunciado']}", "aporte": f"Aporta {ra['enunciado'][0].lower()}{ra['enunciado'][1:80].rstrip('.')}…",
+             "momento": ctx["etapas"][min(i + 1, len(ctx["etapas"]) - 1)],
+             "evidencia_parcial": f"Evidencia parcial {i + 1} de {a['nombre']}"}
+            for i, ra in enumerate(ficha["resultados_aprendizaje"][:2])
+        ]
+        for i, otra in enumerate(companeras):
+            ra = otra["resultados"][0] if otra["resultados"] else {"codigo": "RA1", "enunciado": ""}
+            filas.append({"competencia": competencia, "pf": f"{otra['codigo']} {otra['nombre']}",
+                          "rap": f"{ra['codigo']}: {ra['enunciado']}",
+                          "aporte": f"Aporta el saber de {otra['nombre']} al análisis del problema",
+                          "momento": ctx["etapas"][min(i + 1, len(ctx["etapas"]) - 1)],
+                          "evidencia_parcial": f"Informe técnico de {otra['nombre']}"})
+        participantes = list(dict.fromkeys(f["pf"] for f in filas))
+        evidencia = f"Propuesta integrada de solución para {tema[0].lower() + tema[1:]}, validada con los actores"
+        semanas = int(datos.get("semanas_periodo") or 16)
+        tramo = max(1, semanas // len(ctx["etapas"]))
+        contenido = {
+            "titulo": f"PIS nivel {a['nivel']}: {tema[0].upper() + tema[1:]}",
+            "carrera": a["carrera"], "periodo": ctx["periodo"], "nivel": str(a["nivel"]),
+            "equipo_docente": [ctx["docente"]] + [f"Docente de {o['nombre']}" for o in companeras],
+            "problema": problema, "contexto": escenario,
+            "justificacion": (f"El problema exige integrar los saberes de {self._enumerar(participantes)}; "
+                              "ningún PF por separado alcanza una respuesta pertinente.") if problema else "",
+            "pregunta_reto": (f"¿Cómo podemos responder a {tema[0].lower() + tema[1:]} en {escenario} "
+                              "integrando los aportes de los PF del nivel?"),
+            "delimitacion": f"Se aborda durante el periodo {ctx['periodo']} en {escenario}; no incluye "
+                            "la implementación a escala institucional.",
+            "proposito": (f"Desarrollar {evidencia[0].lower() + evidencia[1:]} para mejorar la situación "
+                          f"de los actores de {escenario}, considerando la ética y la sostenibilidad."),
+            "competencias": [competencia] if competencia else [],
+            "pf_participantes": participantes,
+            "articulacion": filas,
+            "aporte_este_pf": (f"{a['nombre']} aporta "
+                               + self._enumerar([r['codigo'] for r in ficha['resultados_aprendizaje'][:2]])
+                               + " y sus evidencias parciales a la evidencia integradora, sin horas adicionales."),
+            "evidencia_integradora": evidencia,
+            "aportes_integrados": "Integra las evidencias parciales de " + self._enumerar(participantes) + ".",
+            "criterios_logro": ["Responde al problema delimitado con datos verificables",
+                                "Integra los aportes de todos los PF participantes",
+                                "Es validada con los actores del contexto"],
+            "investigacion": {"pregunta": f"¿Qué causas y actores explican {tema[0].lower() + tema[1:]}?",
+                              "enfoque": "Investigación aplicada con enfoque mixto",
+                              "fuentes_tecnicas": "Entrevistas a actores, revisión documental y datos del contexto",
+                              "hallazgos_esperados": "Diagnóstico que fundamenta el diseño de la propuesta"},
+            "etapas": [{"etapa": e, "actuacion": f"Los estudiantes realizan la etapa de {e.lower()}",
+                        "aporte_pf": participantes[min(i, len(participantes) - 1)] if participantes else "",
+                        "resultado": f"Resultado de {e.lower()} que alimenta la etapa siguiente"}
+                       for i, e in enumerate(ctx["etapas"])],
+            "cronograma": [{"semana": f"{i * tramo + 1}–{min(semanas, (i + 1) * tramo)}", "etapa": e,
+                            "actividad": f"Actividades de {e.lower()}",
+                            "pf_rap": participantes[min(i, len(participantes) - 1)] if participantes else "",
+                            "responsable": "Coordinador del PIS", "evidencia": f"Producto de {e.lower()}"}
+                           for i, e in enumerate(ctx["etapas"])],
+            "roles": ctx["roles"], "evaluacion": ctx["evaluacion"],
+            "recursos": "Laboratorios de la sede, herramientas digitales institucionales y tiempo de los actores.",
+            "socializacion": "Presentación pública de la evidencia integradora ante los actores del contexto.",
+            "reflexion": ctx["reflexion"],
+            "impacto": f"Mejora verificable de la situación de los actores de {escenario}.",
+            "prueba_interdisciplinariedad": ("No: si se elimina cualquiera de los PF participantes, la "
+                                             "evidencia integradora pierde un componente indispensable."),
+        }
+        if ctx.get("indicacion"):
+            contenido["proposito"] = self._redactar(ctx | {"local": {"enfasis": ctx["indicacion"]}},
+                                                    contenido["proposito"])
+        return contenido, None
+
+    def _noticia(self, ctx: dict) -> tuple[dict, None]:
+        evento = ctx["evento"]
+        fragmentos = ctx.get("fragmentos", [])
+        puntos = []
+        for f in fragmentos[:4]:
+            frase = f["texto"].replace("\n", " ").split(". ")[0].strip()
+            if frase:
+                puntos.append(frase[:220].rstrip(".") + ".")
+        return {
+            "titulo": evento["titulo"],
+            "resumen": evento["descripcion"],
+            "puntos": puntos,
+            "secciones_afectadas": evento.get("secciones_afectadas", []),
+        }, None
+
+    def _respuesta(self, ctx: dict) -> tuple[dict, str | None]:
+        fragmentos = ctx.get("fragmentos", [])
+        if not fragmentos:
+            return {"respuesta": "", "puntos": []}, "No encontré documentos vigentes que respondan la pregunta."
+        primera = fragmentos[0]
+        texto = primera["texto"].replace("\n", " ")
+        return {
+            "respuesta": (f"Según «{primera['titulo']}» (versión {primera['version']}, p. "
+                          f"{primera['pagina']}): {texto[:420].rstrip()}…"),
+            "puntos": [f"{f['titulo']}, p. {f['pagina']}" for f in fragmentos[1:4]],
+        }, None

@@ -14,6 +14,8 @@ from syllabusai.db.sesion import crear_fabrica_sesiones, crear_motor, crear_tabl
 from syllabusai.formato.definicion import Formato, cargar_formato
 from syllabusai.llm import crear_cliente
 from syllabusai.llm.base import ClienteLLM
+from syllabusai.noticias.servicio import ServicioNoticias
+from syllabusai.pis.servicio import ServicioPIS
 from syllabusai.retrieval.almacen import AlmacenVectorial
 from syllabusai.retrieval.codificadores import CodificadorDenso, crear_codificador
 from syllabusai.retrieval.recuperador import Recuperador
@@ -28,6 +30,12 @@ class Contenedor:
     llm: ClienteLLM
     servicio: ServicioSilabos
     orquestador: Orquestador
+    pis: ServicioPIS
+    noticias: ServicioNoticias
+
+    def cambiar_llm(self, llm: ClienteLLM) -> None:
+        """Usa otro modelo en todos los servicios (p. ej. al pasar del simulado a NVIDIA)."""
+        self.llm = self.servicio.llm = self.pis.llm = self.noticias.llm = llm
 
     def cerrar(self) -> None:
         self.recuperador.almacen.cerrar()
@@ -59,4 +67,6 @@ def crear_contenedor(
         conexion = sqlite3.connect(config.agente.checkpoints, check_same_thread=False)
         checkpointer = SqliteSaver(conexion)
     orquestador = Orquestador(servicio, checkpointer)
-    return Contenedor(config, fabrica, formato, recuperador, llm, servicio, orquestador)
+    pis = ServicioPIS(fabrica, recuperador, llm, config)
+    noticias = ServicioNoticias(fabrica, recuperador, llm)
+    return Contenedor(config, fabrica, formato, recuperador, llm, servicio, orquestador, pis, noticias)
